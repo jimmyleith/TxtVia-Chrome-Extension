@@ -24,3 +24,4 @@ PopUp = (function(){
         }
     };
 })();
+PopUp.init();
