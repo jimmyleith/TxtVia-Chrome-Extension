@@ -7,13 +7,15 @@ PopUp = (function(){
             loginLink:function(){
                 window.close();
                 chrome.tabs.create({
-                    url:TxtVia.url + '/sign_in?appID=' + TxtVia.appID + '&type=chrome'
+                    url:TxtVia.url + '/sign_in' 
                 });
+                // url:TxtVia.url + '/sign_in?appID=' + TxtVia.appID + '&type=chrome'
+                
             },
             logoutLink:function(){
                 window.close();
                 chrome.tabs.create({
-                    url:TxtVia.url + '/sign_out?appID=' + TxtVia.appID + '&type=chrome'
+                    url:TxtVia.url + '/sign_out'
                 });
             }
         },

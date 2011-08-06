@@ -2,15 +2,27 @@ var TxtVia = (function(){
     return {
         init:function(){
             TxtVia.connection.establish();
-            TxtVia.storage.setup();
+            TxtVia.Storage.setup();
             TxtVia.appID = "jencinkdkgacfpadaoikfmakekjdhdmn";
             TxtVia.url = "http://localhost:8080";
+            try{
+                if(TxtVia.getParams("auth_token")){
+                    localStorage["authToken"] = TxtVia.getParams("auth_token");
+                }
+            }catch(){}
         },
-        storage:{
+        getParams: function(name){
+            var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+            return results[1] || 0;
+        },
+        Storage:{
             setup:function(){
                 if (!localStorage["inbox"]) {
                   localStorage["inbox"] = JSON.stringify([]);
                   // window.addEventListener("storage", handle_storage, false);
+                }
+                if(!localStorage["authToken"]){
+                    localStorage["authToken"] = "";
                 }
                 if(TxtVia.server){
                     if(TxtVia.server.connected){
@@ -18,7 +30,8 @@ var TxtVia = (function(){
                     }
                 }
             },
-            inbox:$.parseJSON(localStorage["inbox"])
+            inbox: $.parseJSON(localStorage["inbox"]),
+            authToken: localStorage["authToken"]
         },
         connection:{
             establish:function(){
@@ -28,10 +41,10 @@ var TxtVia = (function(){
                 }
                 TxtVia.server.bind('rails_browser', function(data) {
                     try{
-                        TxtVia.storage.inbox.push(data);
+                        TxtVia.Storage.inbox.push(data);
                         console.log("Data Received");
                         console.log(data);
-                        localStorage["inbox"] = JSON.stringify(TxtVia.storage.inbox);
+                        localStorage["inbox"] = JSON.stringify(TxtVia.Storage.inbox);
                     }catch(e){
                         console.error("something gone wrong with getting the data from WebSocket");
                     }
