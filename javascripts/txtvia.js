@@ -23,13 +23,14 @@ var TxtVia = (function(){
         connection:{
             establish:function(){
                 TxtVia.server = new Pusher('c9351524b47769e60be7', 'txtvia');
-                if(server.connected){
+                if(TxtVia.server){
                     console.log("connection established");
                 }
                 TxtVia.server.bind('rails_browser', function(data) {
                     try{
                         TxtVia.storage.inbox.push(data);
                         console.log("Data Received");
+                        console.log(data);
                         localStorage["inbox"] = JSON.stringify(TxtVia.storage.inbox);
                     }catch(e){
                         console.error("something gone wrong with getting the data from WebSocket");
