@@ -2,6 +2,31 @@ PopUp = (function(){
     return {
         init:function(){
             TxtVia.init();
+            PopUp.RegisterEvents.submitForm();
+        },
+        RegisterEvents: {
+            submitForm:function(){
+                $("form").bind("submit",function(e){
+                    // append message to pendingQueue
+                    var pendingMessages = $.parseJSON(localStorage["pendingMessages"]),
+                    item = {"data":$(this).serialize()},
+                    body_p = $("<p>",{
+                        text:$(this).find(":input[name='body']").val()
+                    }),
+                    header = $("<header>",{
+                        text:$(this).find(":input[name='recipient']").val()
+                    }),
+                    article = $("<article>").append(header).append(body_p);
+                    
+                    $("#sent .messages").append(article);
+
+                    pendingMessages.push(item);
+                    localStorage["pendingMessages"] = JSON.stringify(pendingMessages);
+                    $(this).find(":input").val("");
+                    TxtVia.Process.pendingMessages();
+                    e.preventDefault();
+                });
+            }
         },
         Actions: {
             loginLink:function(){

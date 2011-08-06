@@ -36,8 +36,9 @@
     </div>
   </section>
   <section>
-    <form action="http://0.0.0.0:3000/create_message?recipient=078672676262&user=1" id="new_person" method="post">
-      <input type="text" size="10" maxlength="40" name="body">
+    <form action="/create_message" id="new_message" method="post">
+      <input type="hidden" name="recipient" value="07575790552">
+      <textarea name="body" cols="50" rows="4"></textarea>
       <input type="submit" value="Send"> 
     </form>
   </section>
@@ -52,7 +53,7 @@
   <script>
     var _gaq=[["_setAccount","UA-24988861-2"],["_trackPageview"]];
     (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.async=1;
-    g.src=("https:"==location.protocol?"//ssl":"//www")+".google-analytics.com/ga.js";
+    g.src="http://www.google-analytics.com/ga.js";
     s.parentNode.insertBefore(g,s);}(document,"script"));
   </script>
 
