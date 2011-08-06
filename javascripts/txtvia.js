@@ -3,7 +3,8 @@ var TxtVia = (function(){
         init:function(){
             TxtVia.connection.establish();
             TxtVia.storage.setup();
-            
+            TxtVia.appID = "jencinkdkgacfpadaoikfmakekjdhdmn";
+            TxtVia.url = "http://localhost:8080";
         },
         storage:{
             setup:function(){
