@@ -1,2 +1,6 @@
 @charset 'UTF-8';
 @import url('defaults.css');
+
+#inbox {
+	min-width: 400px;
+}

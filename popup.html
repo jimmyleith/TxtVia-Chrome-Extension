@@ -1,13 +1,12 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <title>TxtVia</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/popup.css">
 </head>
 
 <body>
-  
   <section id="inbox">
     <h1>Inbox</h1>
     <div class="alert notice">
@@ -24,7 +23,7 @@
       </article>
     </div>
   </section>
-  <secrion id="sent">
+  <section id="sent">
     <h1>Sent</h1>
     <div class="alert notice">
       <h2>Empty Sent folder</h2>
@@ -33,7 +32,13 @@
     <div class="messages">
       
     </div>
-  </secrion>
+  </section>
+  <section>
+    <form action="http://0.0.0.0:3000/create_message?recipient=078672676262&user=1" id="new_person" method="post">
+      <input type="text" size="10" maxlength="40" name="body">
+      <input type="submit" value="Send"> 
+    </form>
+  </section>
   
   <script src="javascripts/jquery.js"></script>
   <script src="javascripts/txtvia.js"></script>
