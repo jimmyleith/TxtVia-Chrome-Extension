@@ -5,28 +5,52 @@ PopUp = (function(){
             PopUp.RegisterEvents.submitForm();
             PopUp.RegisterEvents.display();
             PopUp.RegisterEvents.validateForm();
+            PopUp.Process.view();
+        },
+        Process:{
+            view:function(){
+                $("#threads ul").empty();
+                $.each(Thread.list(),function(index){
+                   var li = $("<li>",{
+                       'class':'clearfix',
+                       'id':'threadID'+index
+                   }),
+                   // img = $("<img>",{
+                   //     src:thread
+                   // })
+                   h3 = $("<h3>",{
+                       text: this.recipient.toString()
+                   }),
+                   p = $("<p>",{
+                       text: this.messages[this.messages.length-1].message.body
+                   });
+                                      
+                   li.append(h3).append(p);
+                   
+                   $("#threads ul").append(li);
+                });
+            }
         },
         RegisterEvents: {
             display:function(){
                 var login = $("<a>",{
                     href:"#",
-                    text:"Login",
-                    onclick:function(){
-                      PopUp.Actions.loginLink();  
-                    }
+                    text:"Login"
                 }),
                 logout = $("<a>",{
                     href:"#",
-                    text:"Logout",
-                    onclick:function(){
-                      PopUp.Actions.logoutLink();  
-                    }
+                    text:"Logout"
                 });
                 if(localStorage.authToken !== ""){
                     $("header nav").append(logout);
+                    logout.bind("click",function(){
+                        PopUp.Actions.logoutLink();   
+                    });
                 }else{
                     $("header nav").append(login);
-                    
+                    login.bind("click",function(){
+                        PopUp.Actions.loginLink();   
+                    });
                 }
                 $("#showSettings").bind("mouseenter",function(){
                     $("#settings").fadeIn();
@@ -44,6 +68,9 @@ PopUp = (function(){
                 $("textarea").bind("keyup",function(){
                     if($(this).val() === ""){
                         $("form").find("input[type=submit]").attr("disabled","disabled");
+                    }else{
+                        $("form").find("input[type=submit]").removeAttr("disabled");
+                        
                     }
                 });
             },

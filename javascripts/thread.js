@@ -12,7 +12,7 @@ var Thread = (function(){
             people = $.unique(people);
             
             $.each(people, function(){
-                conversation = {"recipient":this.toString(), "mesages":Thread.messages(this.toString()) };
+                conversation = {"recipient":this.toString(), "messages":Thread.messages(this.toString()) };
                 conversations.push(conversation);
             });
             return conversations;

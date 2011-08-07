@@ -4,7 +4,7 @@ var TxtVia = (function(){
             TxtVia.connection.establish();
             TxtVia.Storage.setup();
             TxtVia.appID = "jencinkdkgacfpadaoikfmakekjdhdmn";
-            TxtVia.url = "http://localhost:8080";
+            TxtVia.url = "http://localhost:8080"; // Development
             
             // Start worker
             setInterval(TxtVia.Process.pendingMessages, 5000);
@@ -99,6 +99,10 @@ var TxtVia = (function(){
                             }
                             if(data.message.received_at){
                                 TxtVia.Notification.newMessage(data.message);
+     
+                            }
+                            if(window.PopUp){
+                                PopUp.Process.view();
                             }
 
                         }catch(e){
