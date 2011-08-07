@@ -18,6 +18,22 @@ var TxtVia = (function(){
             var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
             return results[1] || 0;
         },
+        Notification:{
+            newMessage:function(message){
+                webkitNotifications.createNotification(
+                  '/images/icon48.png',
+                  'New Message Received',
+                  message.recipient + ' said:' + message.body
+                ).show();
+            },
+            messageSent:function(message){                
+                webkitNotifications.createNotification(
+                    '/images/icon48.png',
+                    "Message has been Sent",
+                    "Your message has been sent to " + message.recipient
+                ).show();
+            }
+        },
         Process: {
             pendingMessages:function(){
                 // ajax post to server
@@ -31,7 +47,7 @@ var TxtVia = (function(){
                             crossDomain:true,
                             cache:false,
                             async:false,
-                            data: pendingMessages[0]['data'] + "&auth_token=" + TxtVia.Storage.authToken,
+                            data: pendingMessages[0]['data'] + "&sent_at=" + encodeURIComponent(new Date()) + "&auth_token=" + TxtVia.Storage.authToken,
                             success: function(){
                                 console.log("message sent");
                                 pendingMessages.shift();
@@ -42,8 +58,6 @@ var TxtVia = (function(){
                                 alert("Failed to send message, Will retry."); // turn to notification
                             },
                             completed:function(){  
-
-                                console.log(pendingMessages); 
                                 setTimeout(TxtVia.Process.pendingMessages, 100);
                             }
                         });
@@ -75,21 +89,25 @@ var TxtVia = (function(){
             establish:function(){
                 if(!TxtVia.server){
                     TxtVia.server = new Pusher('c9351524b47769e60be7', 'txtvia');
-                }
+                    TxtVia.server.bind('messages', function(data) {
+                        try{
+                            TxtVia.Storage.inbox.push(data);
+                            console.log("Data Received");
+                            localStorage["messages"] = JSON.stringify(TxtVia.Storage.inbox);
+                            if(data.message.sent_at){                                
+                                TxtVia.Notification.messageSent(data.message);
+                            }
+                            if(data.message.received_at){
+                                TxtVia.Notification.newMessage(data.message);
+                            }
 
-                console.log("connection established");
-                
-                TxtVia.server.bind('messages', function(data) {
-                    try{
-                        TxtVia.Storage.inbox.push(data);
-                        console.log("Data Received");
-                        console.log(data);
-                        localStorage["messages"] = JSON.stringify(TxtVia.Storage.inbox);
-                    }catch(e){
-                        console.error("something gone wrong with getting the data from WebSocket");
-                        console.error(e);
-                    }
-                });
+                        }catch(e){
+                            console.error("something gone wrong with getting the data from WebSocket");
+                            console.error(e);
+                        }
+                    });
+                    console.log("connection established");
+                }
             }
         }
     };

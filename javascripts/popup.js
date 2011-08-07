@@ -22,7 +22,7 @@ PopUp = (function(){
 
                     pendingMessages.push(item);
                     localStorage["pendingMessages"] = JSON.stringify(pendingMessages);
-                    $(this).find(":input").val("");
+                    $(this).find("textarea").val("");
                     TxtVia.Process.pendingMessages();
                     e.preventDefault();
                 });
