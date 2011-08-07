@@ -160,6 +160,7 @@ div#message_input input[type='text'] {
 	position: absolute;
 	top: 4px;
 	left: 5px;
+	outline:none;
 }
 
 
