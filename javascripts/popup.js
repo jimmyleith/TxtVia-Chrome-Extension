@@ -143,9 +143,8 @@ PopUp = (function(){
             loginLink:function(){
                 window.close();
                 chrome.tabs.create({
-                    url:TxtVia.url + '/sign_in' 
+                    url:TxtVia.url + '/sign_in?app_identifier=' + TxtVia.appID + '&app_type=chrome'
                 });
-                // url:TxtVia.url + '/sign_in?appID=' + TxtVia.appID + '&type=chrome'
                 
             },
             logoutLink:function(){

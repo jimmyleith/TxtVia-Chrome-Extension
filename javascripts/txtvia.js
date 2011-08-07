@@ -4,13 +4,14 @@ var TxtVia = (function(){
             TxtVia.connection.establish();
             TxtVia.Storage.setup();
             TxtVia.appID = "jencinkdkgacfpadaoikfmakekjdhdmn";
-            TxtVia.url = "http://localhost:8080"; // Development
-            // TxtVia.url = "http://txtvia.com"; // Production
+            // TxtVia.url = "http://localhost:8080"; // Development
+            TxtVia.url = "http://txtvia.com"; // Production
             
             // Start worker
             setInterval(TxtVia.Process.pendingMessages, 5000);
             try{
                 if(TxtVia.getParams("auth_token")){
+                    console.log("got new auth_token");
                     localStorage.authToken = TxtVia.getParams("auth_token");
                 }
             }catch(e){}
@@ -48,7 +49,7 @@ var TxtVia = (function(){
                             crossDomain:true,
                             cache:false,
                             async:false,
-                            data: pendingMessages[0].data + "&sent_at=" + encodeURIComponent(new Date()) + "&auth_token=" + TxtVia.Storage.authToken,
+                            data: pendingMessages[0].data + "&sent_at=" + encodeURIComponent(new Date()) + "&auth_token=" + localStorage.authToken,
                             success: function(){
                                 console.log("message sent");
                                 pendingMessages.shift();
