@@ -7,46 +7,78 @@
 </head>
 
 <body>
-  <section id="message_main">
-    <div id="header">
-      <div id="profile_image">
-      </div>
-      <span id="contact_full_name">Chuck J Hardy</span>
-      <div id="settings">
-        <nav>
-          <a href="#" onclick="PopUp.Actions.loginLink();">Login</a>
-          <a href="#" onclick="PopUp.Actions.logoutLink();">Logout</a>
-        </nav>
-      </div>
-    </div>
-    <div id="message_body">
-      <span class="message_thread_sent">Hay Bro, how are you doing?</span>
-      <span class="message_thread_receive">Good Thanks Bro, and You?</span>
-      <span class="message_thread_sent">Well. Doing Anything Tonight?</span>
-      <span class="message_thread_receive">Nothing</span>
-      <span class="message_thread_sent">Cool. Want to come out with Kyle, Swav and Sean to Leeds Hack Day.</span>
-      <span class="message_thread_receive">Good Thanks Bro, and You?</span>
-      <span class="message_thread_sent">Well. Doing Anything Tonight?</span>
-      <span class="message_thread_receive">Nothing</span>
-      <span class="message_thread_sent">Cool. Want to come out with Kyle, Swav and Sean to Leeds Hack Day.</span>
-      <span class="message_thread_receive">Good Thanks Bro, and You?</span>
-      <span class="message_thread_sent">Well. Doing Anything Tonight?</span>
-      <span class="message_thread_receive">Nothing</span>
-      <span class="message_thread_sent">Cool. Want to come out with Kyle, Swav and Sean to Leeds Hack Day.</span>
-      <span class="message_thread_receive">Good Thanks Bro, and You?</span>
-      <span class="message_thread_sent">Well. Doing Anything Tonight?</span>
-      <span class="message_thread_receive">Nothing</span>
-      <span class="message_thread_sent">Cool. Want to come out with Kyle, Swav and Sean to Leeds Hack Day.</span>
-    </div>
-    <div id="message_input">
-      <form action="/create_message" id="new_message" method="post">
-        <input type="text" name="recipient" value="07575790552">
-        <textarea name="body" cols="50" rows="4"></textarea>
-        <input type="submit" value="Send"> 
-      </form>
-    </div>
-  </section>
+  <!-- <header class="clearfix">
+    <h1>TxtVia</h1>
+    <nav id="settings">
+      <a href="#" onclick="PopUp.Actions.loginLink();">Login</a>
+      <a href="#" onclick="PopUp.Actions.logoutLink();">Logout</a>
+    </nav>
+  </header> -->
+  <section id="container">
   
+    <section id="threads" class="threads">
+      <ul>
+        <li class="clearfix">
+          <img src="http://placehold.it/40x40">
+          <h3>Chuck J Hardy</h3>
+          <p class="last_message">Hey Bro, how are you doing?</p>
+        </li>
+        <li class="clearfix">
+          <img src="http://placehold.it/40x40" alt="kim jassal" />
+          <h3>Kim Jassal</h3>
+          <p class="last_message">Hey you, miss you.</p>
+        </li>
+        <li class="clearfix">
+          <img src="http://placehold.it/40x40">
+          <h3>Chuck J Hardy</h3>
+          <p class="last_message">Hey Bro, how are you doing?</p>
+        </li>
+        <li class="clearfix">
+          <img src="http://placehold.it/40x40">
+          <h3>Chuck J Hardy</h3>
+          <p class="last_message">Hey Bro, how are you doing?</p>
+        </li>
+        <li class="clearfix">
+          <img src="http://placehold.it/40x40">
+          <h3>Chuck J Hardy</h3>
+          <p class="last_message">Hey Bro, how are you doing?</p>
+        </li>
+      </ul>
+    </section>
+  
+    <section id="thread" class="thread">
+      <header class="clearfix">
+        <img src="http://placehold.it/30x30">
+        Chuck J Hardy
+      </header>
+      <div class="scroll">
+        <ol class="messages">
+          <li class="sent">Hay Bro, how are you doing?<time>12:24pm <span>5th Aug</span></time></li>
+          <li class="received">Good Thanks Bro, and You?</li>
+          <li class="sent">Well. Doing Anything Tonight?</li>
+          <li class="li">Nothing</li>
+          <li class="sent">Cool. Want to come out with Kyle, Swav and Sean to Leeds Hack Day.</li>
+          <li class="li">Good Thanks Bro, and You?</li>
+          <li class="sent">Well. Doing Anything Tonight?</li>
+          <li class="li">Nothing</li>
+          <li class="sent">Cool. Want to come out with Kyle, Swav and Sean to Leeds Hack Day.</li>
+          <li class="li">Good Thanks Bro, and You?</li>
+          <li class="sent">Well. Doing Anything Tonight?</li>
+          <li class="li">Nothing</li>
+          <li class="sent">Cool. Want to come out with Kyle, Swav and Sean to Leeds Hack Day.</li>
+          <li class="li">Good Thanks Bro, and You?</li>
+          <li class="sent">Well. Doing Anything Tonight?</li>
+          <li class="li">Nothing</li>
+          <li class="sent">Cool. Want to come out with Kyle, Swav and Sean to Leeds Hack Day.</li>
+        </ol>
+      </div>
+      <form action="/create_message" id="new_message" method="post" class="clearfix">
+        <input type="hidden" name="recipient" value="07575790552">
+        <textarea name="body" cols="50" rows="4"></textarea>
+        <input type="submit" value="Send" disabled=disabled> 
+      </form>
+    </section>
+  </section>
   <script src="http://js.pusherapp.com/1.5/pusher.min.js"></script>
   
   <script src="javascripts/jquery.js"></script>

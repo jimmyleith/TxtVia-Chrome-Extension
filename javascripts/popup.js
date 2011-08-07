@@ -5,6 +5,13 @@ PopUp = (function(){
             PopUp.RegisterEvents.submitForm();
         },
         RegisterEvents: {
+            validateForm:function(){
+                $("textarea").bind("keyup",function(){
+                    if($(this).val() === ""){
+                        $("form").find("input[type=submit]").attr("disabled","disabled");
+                    }
+                });
+            },
             submitForm:function(){
                 $("form").bind("submit",function(e){
                     // append message to pendingQueue
