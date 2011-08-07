@@ -106,6 +106,12 @@ section#message_main {
 	background-image: url(../images/main_background.png);
 }
 
+div#message_body {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	height: 321px;
+}
+
 span.message_thread_sent, span.message_thread_receive {
 	font: 11px "Lucida Grande", Lucida, Verdana, sans-serif;
 	width: 280px;
@@ -154,7 +160,48 @@ div#message_input input[type='text'] {
 	position: absolute;
 	top: 4px;
 	left: 5px;
-	outline:none;
-	color: #f5fef7;
-	font: 11px "Lucida Grande", Lucida, Verdana, sans-serif;
+}
+
+
+/* ----------------------------------
+---------    SCROLLBAR      ---------
+---------------------------------- */
+
+::-webkit-scrollbar {
+width: 9px;
+height: 15px;
+background: transparent;
+}
+::-webkit-scrollbar-button:start:decrement,
+::-webkit-scrollbar-button:end:increment {
+display: none;
+}
+::-webkit-scrollbar-track {
+background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+-webkit-border-radius: 10px;
+border-radius: 10px;
+background: rgba(255,254,255,0.1);
+height:5px;
+width:5px;
+padding: 5px;
+border: 1px solid rgba(0,0,0,0.2);
+border-top-width: 0;
+border-top-style: solid;
+-webkit-transition: all 1s ease-in-out;
+-moz-transition: all 1s ease-in-out;
+-o-transition: all 1s ease-in-out;
+-ms-transition: all 1s ease-in-out;
+transition: all 1s ease-in-out; 
+ margin:5px;
+}
+::-webkit-scrollbar-thumb:horizontal{
+ width:50px;
+}
+
+::-webkit-scrollbar-thumb:active, .moveing ::-webkit-scrollbar-thumb {
+opacity: 1;
+background: rgba(255,255,255,1);
 }

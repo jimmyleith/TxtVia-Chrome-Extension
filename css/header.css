@@ -41,6 +41,12 @@ section#message_main {
 	background-image: url(../images/main_background.png);
 }
 
+div#message_body {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	height: 321px;
+}
+
 span.message_thread_sent, span.message_thread_receive {
 	font: 11px "Lucida Grande", Lucida, Verdana, sans-serif;
 	width: 280px;
