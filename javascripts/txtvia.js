@@ -10,7 +10,7 @@ var TxtVia = (function(){
             setInterval(TxtVia.Process.pendingMessages, 5000);
             try{
                 if(TxtVia.getParams("auth_token")){
-                    localStorage["authToken"] = TxtVia.getParams("auth_token");
+                    localStorage.authToken = TxtVia.getParams("auth_token");
                 }
             }catch(e){}
         },
@@ -37,7 +37,7 @@ var TxtVia = (function(){
         Process: {
             pendingMessages:function(){
                 // ajax post to server
-                var pendingMessages = $.parseJSON(localStorage["pendingMessages"]);
+                var pendingMessages = $.parseJSON(localStorage.pendingMessages);
                     if(pendingMessages.length > 0 && window.navigator.onLine){
                         console.log("preparing to send message");
                         $.ajax({
@@ -47,12 +47,12 @@ var TxtVia = (function(){
                             crossDomain:true,
                             cache:false,
                             async:false,
-                            data: pendingMessages[0]['data'] + "&sent_at=" + encodeURIComponent(new Date()) + "&auth_token=" + TxtVia.Storage.authToken,
+                            data: pendingMessages[0].data + "&sent_at=" + encodeURIComponent(new Date()) + "&auth_token=" + TxtVia.Storage.authToken,
                             success: function(){
                                 console.log("message sent");
                                 pendingMessages.shift();
-                                localStorage["pendingMessages"] = JSON.stringify(pendingMessages);
-                                localStorage["pendingMessages"] = JSON.stringify(pendingMessages); // Double kill yeah!
+                                localStorage.pendingMessages = JSON.stringify(pendingMessages);
+                                localStorage.pendingMessages = JSON.stringify(pendingMessages); // Double kill yeah!
                             },
                             failure:function(){
                                 alert("Failed to send message, Will retry."); // turn to notification
@@ -66,15 +66,15 @@ var TxtVia = (function(){
         },
         Storage:{
             setup:function(){
-                if (!localStorage["messages"]) {
-                  localStorage["messages"] = JSON.stringify([]);
+                if (!localStorage.messages) {
+                  localStorage.messages = JSON.stringify([]);
                   // window.addEventListener("storage", handle_storage, false);
                 }
-                if(!localStorage["authToken"]){
-                    localStorage["authToken"] = "";
+                if(!localStorage.authToken){
+                    localStorage.authToken = "";
                 }
-                if(!localStorage["pendingMessages"]){
-                    localStorage["pendingMessages"] = JSON.stringify([]);
+                if(!localStorage.pendingMessages){
+                    localStorage.pendingMessages = JSON.stringify([]);
                 }
                 if(TxtVia.server){
                     if(TxtVia.server.connected){
@@ -82,8 +82,8 @@ var TxtVia = (function(){
                     }
                 }
             },
-            inbox: $.parseJSON(localStorage["messages"]),
-            authToken: localStorage["authToken"]
+            inbox: $.parseJSON(localStorage.messages),
+            authToken: localStorage.authToken
         },
         connection:{
             establish:function(){
@@ -93,7 +93,7 @@ var TxtVia = (function(){
                         try{
                             TxtVia.Storage.inbox.push(data);
                             console.log("Data Received");
-                            localStorage["messages"] = JSON.stringify(TxtVia.Storage.inbox);
+                            localStorage.messages = JSON.stringify(TxtVia.Storage.inbox);
                             if(data.message.sent_at){                                
                                 TxtVia.Notification.messageSent(data.message);
                             }
