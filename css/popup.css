@@ -2,15 +2,14 @@
 @import url('defaults.css');
 html{ 
 	background:#48525C url(../images/background.jpg) repeat center center; 
-	width:330px;
-	height:460px;
+	min-width:330px;
 }
 body {
-	min-width: 330px;
 
 	color:#d1d1d1;
 	text-shadow:rgba(0,0,0,0.78) 0 1px 0;
-	-webkit-transition: all 0.5s ease-in-out;
+	-webkit-transition: all 0.5s ease-in-out; 
+	width:100%; 
 }
 
 
@@ -20,13 +19,24 @@ body {
 	margin-left:auto; 
 	margin-right:auto;
 	display:box;
-	box-orient: horizontal;
+	box-orient: horizontal; 
+	position:absolute; 
+	width:100%; 
+	bottom:0; 
+	right:0; 
+	left:0; 
+	top:65px;
 }
 header{
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.1)), color-stop(1%,rgba(0,0,0,0.2)), color-stop(48%,rgba(0,0,0,0.05)), color-stop(100%,rgba(0,0,0,0.2)));
 	background: -webkit-linear-gradient(top, rgba(0,0,0,0.2) 0%,rgba(0,0,0,0.2) 1%,rgba(0,0,0,0.05) 48%,rgba(0,0,0,0.1) 100%);
 	background: linear-gradient(top, rgba(0,0,0,0.2) 0%,rgba(0,0,0,0.2) 1%,rgba(0,0,0,0.05) 48%,rgba(0,0,0,0.1) 100%); 
-	color:#e5e5e5;
+	color:#e5e5e5; 
+	top:0; 
+	right:0; 
+	left:0; 
+	position:absolute; 
+	z-index:6;
 }
 header h1{ 
 	font-size:18px; 
@@ -45,12 +55,14 @@ header>nav{
 .threads{
 	box-sizing: border-box;
 	z-index:5;
-	box-shadow:0 0 10px rgba(0,0,0,5); 
+	box-shadow:0 8px 10px rgba(0,0,0,5); 
 	top:0; 
 	left:0; 
 	bottom:0; 
 	position:absolute; 
 	right:50%;
+	overflow-y:auto;
+	overflow-x:hidden;
 }
 section#threads h3{ 
 	color:#e1e1e1; 
@@ -149,7 +161,8 @@ section#threads img{
 	bottom:0; 
 	right:115px;
 }
-.thread form textarea, .thread form input[type=submit]{
+.thread form textarea, .thread form input[type=submit], input[type=search]{
+	-webkit-appearance: none;
 	-webkit-transition: all 0.5s ease-in-out;
 	border-radius:5px; 
 	background-color:#282d33;
