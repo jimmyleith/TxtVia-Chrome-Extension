@@ -1,68 +1,3 @@
-@charset 'UTF-8';
-@import url('defaults.css');
-
-body {
-	min-width: 300px;
-	min-height: 400px;
-	background-color: #48525C;
-  border-bottom: 1px solid #363431;
-}
-
-#inbox, #sent, #form {
-	width: 300px;
-}
-
-/* ----------------------------------
----------        FORMS      ---------
----------------------------------- */
-
-#form {
-	position: absolute; bottom: 0;	
-}
-
-input,
-textarea {
-  background-color: transparent;
-  border: 0;
-  border: 1px solid #45433f;
-  padding: 0;
-
-  -moz-border-radius: 2px;
-  -webkit-border-radius: 2px;
-  border-radius: 2px;
-
-  -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
-  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
-}
-
-input {
-  display: block;
-  height: 25px;
-  padding-left: 7px;
-  padding-right: 7px;
-}
-
-input[type="text"] {
-	width: 228px;
-	float:left;
-}
-
-#submit,
-input[type=submit] {
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: block;
-  width: 70px;
-  padding: 0 25px 0 25px;
-  float: left;
-
-  -moz-box-shadow: none;
-  -webkit-box-shadow: none;
-  box-shadow: none;
-}
-
 div#header {
 	height: 38px;
 	width: 300px;
@@ -154,7 +89,4 @@ div#message_input input[type='text'] {
 	position: absolute;
 	top: 4px;
 	left: 5px;
-	outline:none;
-	color: #f5fef7;
-	font: 11px "Lucida Grande", Lucida, Verdana, sans-serif;
 }
