@@ -12,6 +12,12 @@
   },
   "background_page":"background.html",
   "permissions": [
-    "notifications"
+    "notifications",
+    "http://txtvia.com/",
+    "https://txtvia.com/",
+    "http://txtvia.co.uk/",
+    "https://txtvia.co.uk/",
+    "http://localhost:8080/",
+    "http://localhost/"
   ]
 }
