@@ -2,7 +2,8 @@
 @import url('defaults.css');
 html{ 
 	background:#48525C url(../images/background.jpg) repeat center center; 
-
+	width:330px;
+	height:460px;
 }
 body {
 	min-width: 330px;
