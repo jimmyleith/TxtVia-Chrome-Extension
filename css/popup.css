@@ -42,7 +42,7 @@ header select{
 	-webkit-appearance: none; 
 	outline:none;
 	box-shadow:inset 0 0 10px rgba(0,0,0,.25); 
-	width:140px;
+	width:120px;
 }
 header input[type=search]{ 
 	outline:none;
@@ -50,7 +50,7 @@ header input[type=search]{
 	background:#282d33 url(../images/mag_glass.png) no-repeat 5px center;
 	box-shadow:inset 0 0 10px rgba(0,0,0,.25); 
 	position:absolute; 
-	left:150px; 
+	left:140px; 
 	right:30px;
 }
 header h1{ 
@@ -83,12 +83,11 @@ header nav{
 }
 header nav a{ 
 	text-shadow:none;
-
 	text-decoration:none; 
 	display:block; 
 	text-align:left; 
 	padding:5px 10px; 
-	color:black;
+	color:#525252;
 }
 header nav a:hover{
 	color:white; 
@@ -129,6 +128,7 @@ section#threads ul{
 }
 section#threads li{ 
 	padding:15px;
+	cursor:pointer;
 }
 section#threads li:nth-child(even){ 
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.1)), color-stop(1%,rgba(0,0,0,0.2)), color-stop(48%,rgba(0,0,0,0.05)), color-stop(100%,rgba(0,0,0,0.2)));
@@ -150,15 +150,34 @@ section#threads img{
 	top:0; 
 	right:0; 
 	bottom:0; 
-	left:50%;
+	left:50%; 
+	z-index:10;
 }
 .thread header{ 
 	padding:15px; 
 	border-bottom:1px solid #313842;
 }
+.thread header a{ 
+	float:left; 
+	padding:5px 10px 2px 15px; 
+	background:url(../images/arrow_left.png) no-repeat left center; 
+	color:#ddd; 
+	text-decoration:none; 
+	font-size:16px; 
+	margin-top:3px; 
+	margin-right:15px;
+}
+.thread header hgroup{ 
+	float:left;
+}
 .thread header img{ 
 	float:left; 
 	margin-right:10px;
+}
+.thread header hgroup h3{ 
+	float:left; 
+	font-size:18px; 
+	padding-top:5px;
 }
 .thread .scroll{ 
 	position:absolute; 
@@ -242,7 +261,12 @@ section#threads img{
 	position:absolute; 
 	top:0; 
 	right:0; 
-	bottom:0;
+	bottom:0; 
+	width:95px; 
+	line-height:2em;
+}
+.thread form.loading input[type=submit]{ 
+	font-size:1em;
 }
 .thread form input[type=submit]:hover{
 	background: rgb(123,176,215);
@@ -296,7 +320,8 @@ div#settings {
 
 @media (max-width: 640px) {
 	.threads{
-		display:none;
+		left:-100%;
+		right:0;
 	}
 	.thread{
 		left:0;

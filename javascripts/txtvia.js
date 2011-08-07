@@ -5,6 +5,7 @@ var TxtVia = (function(){
             TxtVia.Storage.setup();
             TxtVia.appID = "jencinkdkgacfpadaoikfmakekjdhdmn";
             TxtVia.url = "http://localhost:8080"; // Development
+            // TxtVia.url = "http://txtvia.com"; // Production
             
             // Start worker
             setInterval(TxtVia.Process.pendingMessages, 5000);
