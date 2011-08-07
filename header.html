@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>TxtVia</title>
-  <link rel="stylesheet" href="css/popup.css">
+  <link rel="stylesheet" href="css/header.css">
 </head>
 
 <body>
@@ -13,10 +11,6 @@
       </div>
       <span id="contact_full_name">Chuck J Hardy</span>
       <div id="settings">
-        <nav>
-          <a href="#" onclick="PopUp.Actions.loginLink();">Login</a>
-          <a href="#" onclick="PopUp.Actions.logoutLink();">Logout</a>
-        </nav>
       </div>
     </div>
     <div id="message_body">
@@ -39,27 +33,11 @@
       <span class="message_thread_sent">Cool. Want to come out with Kyle, Swav and Sean to Leeds Hack Day.</span>
     </div>
     <div id="message_input">
-      <form action="/create_message" id="new_message" method="post">
-        <input type="text" name="recipient" value="07575790552">
-        <textarea name="body" cols="50" rows="4"></textarea>
-        <input type="submit" value="Send"> 
+      <form action="#" id="new_person" method="post">
+        <input type="text" size="10" maxlength="40" name="body">
+        <input type="submit" value=""> 
       </form>
     </div>
   </section>
-  
-  <script src="http://js.pusherapp.com/1.5/pusher.min.js"></script>
-  
-  <script src="javascripts/jquery.js"></script>
-  <script src="javascripts/txtvia.js"></script>
-  <script src="javascripts/thread.js"></script>
-  <script src="javascripts/popup.js"></script>
-  
-  <script>
-    var _gaq=[["_setAccount","UA-24988861-2"],["_trackPageview"]];
-    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.async=1;
-    g.src="http://www.google-analytics.com/ga.js";
-    s.parentNode.insertBefore(g,s);}(document,"script"));
-  </script>
-
 </body>
 </html>
