@@ -4,8 +4,9 @@ var TxtVia = (function(){
             TxtVia.connection.establish();
             TxtVia.Storage.setup();
             TxtVia.appID = "jencinkdkgacfpadaoikfmakekjdhdmn";
-            // TxtVia.url = "http://localhost:8080"; // Development
-            TxtVia.url = "http://txtvia.com"; // Production
+            TxtVia.url = "http://localhost:8080"; // Development
+            // TxtVia.url = "http://txtvia.com"; // Production
+            // TxtVia.url = "http://staging.txtvia.com"; // Staging
             
             // Start worker
             setInterval(TxtVia.Process.pendingMessages, 5000);
@@ -27,6 +28,17 @@ var TxtVia = (function(){
                   'New Message Received',
                   message.recipient + ' said:' + message.body
                 ).show();
+                if(chrome){
+                    (function(){
+                        var text = localStorage.unReadMessages;
+                        if(text === 0){
+                            text = "";
+                        }
+                        chrome.browserAction.setBadgeText({
+                            text:text.toString()
+                        });
+                    })();
+                }
             },
             messageSent:function(message){                
                 webkitNotifications.createNotification(
@@ -72,6 +84,9 @@ var TxtVia = (function(){
                   localStorage.messages = JSON.stringify([]);
                   // window.addEventListener("storage", handle_storage, false);
                 }
+                if(!localStorage.unReadMessages){
+                    localStorage.unReadMessages = 0;
+                }
                 if(!localStorage.authToken){
                     localStorage.authToken = "";
                 }
@@ -95,13 +110,13 @@ var TxtVia = (function(){
                         try{
                             TxtVia.Storage.inbox.push(data);
                             console.log("Data Received");
+                            console.log(data);
                             localStorage.messages = JSON.stringify(TxtVia.Storage.inbox);
                             if(data.message.sent_at){                                
                                 TxtVia.Notification.messageSent(data.message);
                             }
                             if(data.message.received_at){
                                 TxtVia.Notification.newMessage(data.message);
-     
                             }
                             if(window.PopUp){
                                 PopUp.Process.view();

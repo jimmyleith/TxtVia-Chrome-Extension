@@ -8,7 +8,8 @@
   "homepage_url":"http://txtvia.com",
   "browser_action":{
     "default_icon":"images/icon16.png",
-    "popup":"popup.html"
+    "default_title":"TxtVia",
+    "default_popup":"popup.html"
   },
   "background_page":"background.html",
   "permissions": [
@@ -16,6 +17,8 @@
     "management",
     "http://txtvia.com/",
     "http://txtvia.heroku.com/",
+    "http://staging.txtvia.com/",
+    "http://txtvia-staging.heroku.com/",
     "https://txtvia.com/",
     "http://txtvia.co.uk/",
     "https://txtvia.co.uk/",
