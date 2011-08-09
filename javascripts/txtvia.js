@@ -62,8 +62,14 @@ var TxtVia = (function(){
                             cache:false,
                             async:false,
                             data: pendingMessages[0].data + "&sent_at=" + encodeURIComponent(new Date()) + "&auth_token=" + localStorage.authToken,
-                            success: function(){
+                            success: function(data){
                                 console.log("message sent");
+                                TxtVia.Storage.messages.push(data);
+                                localStorage.messages = JSON.stringify(TxtVia.Storage.messages);
+                                TxtVia.Notification.messageSent(data.message);
+                                if(window.PopUp){
+                                    PopUp.Process.view();
+                                }
                                 pendingMessages.shift();
                                 localStorage.pendingMessages = JSON.stringify(pendingMessages);
                                 localStorage.pendingMessages = JSON.stringify(pendingMessages); // Double kill yeah!
@@ -99,7 +105,7 @@ var TxtVia = (function(){
                     }
                 }
             },
-            inbox: $.parseJSON(localStorage.messages),
+            messages: $.parseJSON(localStorage.messages),
             authToken: localStorage.authToken
         },
         connection:{
@@ -108,10 +114,10 @@ var TxtVia = (function(){
                     TxtVia.server = new Pusher('c9351524b47769e60be7', 'txtvia');
                     TxtVia.server.bind('messages', function(data) {
                         try{
-                            TxtVia.Storage.inbox.push(data);
+                            TxtVia.Storage.messages.push(data);
                             console.log("Data Received");
                             console.log(data);
-                            localStorage.messages = JSON.stringify(TxtVia.Storage.inbox);
+                            localStorage.messages = JSON.stringify(TxtVia.Storage.messages);
                             if(data.message.sent_at){                                
                                 TxtVia.Notification.messageSent(data.message);
                             }
