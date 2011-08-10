@@ -80,6 +80,7 @@ PopUp = (function(){
                 $(".thread ol").empty();
                 console.log(recipient);
                 $.each(Thread.messages(recipient),function(){
+                    
                    var li = $("<li>",{
                        'class': this.message.sent_at ? "sent" : "received",
                        html: this.message.body + "&nbsp;"

@@ -13,7 +13,7 @@ var TxtVia = (function(){
                 TxtVia.appName = "Unknown Client";
             }
             
-            TxtVia.env = "development";
+            // TxtVia.env = "development";
             
             switch(TxtVia.env){
                 case "development":
@@ -77,6 +77,8 @@ var TxtVia = (function(){
                   'New Message Received',
                   message.recipient + ' said:' + message.body
                 ).show();
+                localStorage.unReadMessages = parseInt(localStorage.unReadMessages,10) + 1;
+                
                 if(chrome){
                     (function(){
                         var text = localStorage.unReadMessages;
@@ -220,10 +222,11 @@ var TxtVia = (function(){
         },
         connection:{
             establish:function(){
-                if(!TxtVia.server && localStorage.authToken){
-                    TxtVia.server = new Pusher('c9351524b47769e60be7', 'txtvia_'+localStorage.authToken);
+                if(!TxtVia.server && localStorage.authToken && TxtVia.webSocketID){
+                    TxtVia.server = new Pusher(TxtVia.webSocketID.toString(), 'txtvia_'+localStorage.authToken);
                     TxtVia.server.bind('messages', function(data) {
                         try{
+                            data.message.read = false;
                             TxtVia.Storage.messages.push(data);
                             console.log("Data Received");
                             console.log(data);
