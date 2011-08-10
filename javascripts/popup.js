@@ -6,14 +6,40 @@ PopUp = (function(){
             PopUp.RegisterEvents.display();
             PopUp.RegisterEvents.validateForm();
             PopUp.Process.view();
+            
+            window.addEventListener("storage",PopUp.Event.storage,false);
+        },
+        Event:{
+          storage:function(e){
+              console.log("storage accessed:"+ e.key);
+              
+/*
+              switch(e.key){
+                  case "devices":
+                    PopUp.UI.deviceList();
+                  break;
+                  case "messages":
+                    PopUp.Process.view();
+                  break;
+              }*/
+
+          }  
         },
         Process:{
             view:function(){
+                PopUp.UI.deviceList();
                 PopUp.Process.threads();
                 if(Thread.list()[0]){
                     PopUp.Process.thread(Thread.list()[0].recipient);
                 }
+                $("input[type=search]").autocomplete({
+                    source: Contact.data,
+                    select:function(e,ui){
+                        $("form input[name=recipient]").val(ui.item.value);
+                    }
+                });
                 $("form").removeClass("loading");
+                PopUp.UI.displayEnv();
             },
             threads:function(){
                 $("#threads ul").empty();
@@ -26,14 +52,14 @@ PopUp = (function(){
                        src:'/images/user_profile_image50.png'
                    }),
                    h3 = $("<h3>",{
-                       text: this.recipient
+                       text: Contact.lookup(this.recipient)
                    }),
                    p = $("<p>",{
                        text: this.messages[this.messages.length-1].message.body
                    }), 
                    recipient = this.recipient;
-                                      
-                   li.append(h3).append(p);
+
+                   li.append(img).append(h3).append(p);
                    li.bind("click",function(){
                        // console.log("clicked");
                        PopUp.Process.thread(recipient);
@@ -45,13 +71,15 @@ PopUp = (function(){
                 });
             },
             thread:function(recipient){
-                var header = $(".thread header hgroup h3").text(recipient),
+                var header = $(".thread header hgroup h3").html(Contact.lookup(recipient)),
                 img = $(".thread header img",{
                     src:"/images/user_profile_image30.png"
                 });
+                header.append(img);
                 $("form input[name=recipient]").val(recipient);
                 $(".thread ol").empty();
-                $.each(Thread.messages(recipient),function(){                    
+                console.log(recipient);
+                $.each(Thread.messages(recipient),function(){
                    var li = $("<li>",{
                        'class': this.message.sent_at ? "sent" : "received",
                        html: this.message.body + "&nbsp;"
@@ -92,7 +120,7 @@ PopUp = (function(){
                         PopUp.Actions.loginLink();   
                     });
                 }
-                $("#showSettings").bind("mouseenter",function(){
+                $("#showSettings").bind("click",function(){
                     $("#settings").fadeIn();
                 });
                 $("#showSettings").bind("mouseleave",function(){
@@ -143,13 +171,15 @@ PopUp = (function(){
             loginLink:function(){
                 window.close();
                 chrome.tabs.create({
-                    url:TxtVia.url + '/sign_in?app_identifier=' + TxtVia.appID + '&app_type=chrome'
+                    url:TxtVia.url + '/sign_in?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
                 });
+                 // url:TxtVia.url + '/sign_in?app_identifier=' + TxtVia.appID + '&app_type=chrome'
                 
             },
             logoutLink:function(){
                 window.close();
                 localStorage.authToken = "";
+                localStorage.clientId = 0;
                 chrome.tabs.create({
                     url:TxtVia.url + '/sign_out'
                 });
@@ -182,6 +212,21 @@ PopUp = (function(){
         UI:{
             alert:function(){
                 alert("MESSAGE< MESSAGE< MESSAGE");
+            },
+            displayEnv:function(){
+                if(TxtVia.env !== "production" || TxtVia.env === undefined){
+                    $(".threads footer").html("Running in " + TxtVia.env + " mode");
+                }
+            },
+            deviceList:function(){
+                $("select[name=device]").empty();
+                $.each(JSON.parse(localStorage.devices),function(){
+                    console.log(this);
+                    $("select[name=device]").append($("<option>",{
+                        text:this.device.name,
+                        value:this.device.id
+                    }));
+                });
             }
         }
     };

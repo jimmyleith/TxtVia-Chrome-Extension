@@ -9,11 +9,8 @@
 <body>
   <header class="clearfix">
     <select name="device">
-      <option>Device 1</option>
-      <option>Device 2</option>
-      <option>Esendex</option>
     </select>
-    <input type="search" name="contacts" placeholder="Contact Search">
+    <input type="search" name="contacts" placeholder="Contact Search" autofocus results="5">
     <a href="#" id="showSettings" class="ir">Show Settings</a>
     <nav id="settings">
 
@@ -24,6 +21,9 @@
     <section id="threads" class="threads">
       <ul>
       </ul>
+      <footer>
+        
+      </footer>
     </section>
   
     <section id="thread" class="thread">
@@ -39,7 +39,7 @@
         </ol>
       </div>
       <form action="/create_message" id="new_message" method="post" class="clearfix">
-        <input type="hidden" name="recipient" value="07575790552">
+        <input type="hidden" name="recipient" value="+447575790552">
         <textarea name="body" cols="50" rows="4"></textarea>
         <input type="submit" value="Send" disabled=disabled> 
       </form>
@@ -48,8 +48,10 @@
   <script src="http://js.pusherapp.com/1.5/pusher.min.js"></script>
   
   <script src="javascripts/jquery.js"></script>
+  <script src="javascripts/jquery-ui-1.8.14.custom.min.js"></script>
   <script src="javascripts/jquery.timeago.js"></script>
   <script src="javascripts/txtvia.js"></script>
+  <script src="javascripts/contact.js"></script>
   <script src="javascripts/thread.js"></script>
   <script src="javascripts/popup.js"></script>
   
