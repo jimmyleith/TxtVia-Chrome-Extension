@@ -85,6 +85,7 @@ var TxtVia = (function(){
                         if(text === 0){
                             text = "";
                         }
+                        // wap
                         chrome.browserAction.setBadgeText({
                             text:text.toString()
                         });

@@ -6,8 +6,17 @@ PopUp = (function(){
             PopUp.RegisterEvents.display();
             PopUp.RegisterEvents.validateForm();
             PopUp.Process.view();
-            
-            window.addEventListener("storage",PopUp.Event.storage,false);
+            if(localStorage.authToken){
+                $("body").removeClass("firstLaunch").addClass("main");
+            }
+            $("input[type=password][name=pincode]").bind("keyup", function(e){
+                console.log($(this).val());
+                if(parseInt($(this).val(),10) === 1234){
+                    console.log("unlock");
+                    PopUp.Actions.unlock();
+                }
+            });
+            // window.addEventListener("storage",PopUp.Event.storage,false);
         },
         Event:{
           storage:function(e){
@@ -42,7 +51,7 @@ PopUp = (function(){
                 PopUp.UI.displayEnv();
             },
             threads:function(){
-                $("#threads ul").empty();
+                $("#threads ul li:not(.new_message)").remove();
                 $.each(Thread.list(),function(index){
                    var li = $("<li>",{
                        'class':'clearfix',
@@ -136,16 +145,16 @@ PopUp = (function(){
             validateForm:function(){
                 $("textarea").bind("keyup",function(){
                     if($(this).val() === ""){
-                        $("form").find("input[type=submit]").attr("disabled","disabled");
+                        $("form#new_message").find("input[type=submit]").attr("disabled","disabled");
                     }else{
-                        $("form").find("input[type=submit]").removeAttr("disabled");
+                        $("form#new_message").find("input[type=submit]").removeAttr("disabled");
                         
                     }
                 });
             },
             submitForm:function(){
-                $("form").bind("submit",function(e){
-                    $("form").addClass("loading");
+                $("form#new_message").bind("submit",function(e){
+                    $("form#new_message").addClass("loading");
                     
                     // append message to pendingQueue
                     var pendingMessages = $.parseJSON(localStorage.pendingMessages),
@@ -186,28 +195,36 @@ PopUp = (function(){
                 });
             },
             backToThreads:function(){
-                $(".threads").animate({
-                   left:'0%',
-                   right:'0%' 
-                },500,'swing');
-                $(".thread").animate({
-                    left:'100%',
-                    right:'-100%'
-                },500,'swing');
+                $("body").removeClass("thread").addClass("threads");
+                // $(".threads").animate({
+                //    left:'0%',
+                //    right:'0%' 
+                // },500,'swing');
+                // $(".thread").animate({
+                //     left:'100%',
+                //     right:'-100%'
+                // },500,'swing');
             },
             gotToThread:function(){
-                $(".threads").css({
-                    width:$(".threads").width()
-                }).animate({
-                   left:'-100%',
-                   right:'100%' 
-                },500,'swing');
-                $(".thread").css({
-                    width:$(".threads").width()
-                }).animate({
-                    left:'0%',
-                    right:'0%'
-                },500,'swing');
+                $("body").removeClass("threads").addClass("thread");
+                // $(".threads").css({
+                //     width:$(".threads").width()
+                // }).animate({
+                //    left:'-100%',
+                //    right:'100%' 
+                // },500,'swing');
+                // $(".thread").css({
+                //     width:$(".threads").width()
+                // }).animate({
+                //     left:'0%',
+                //     right:'0%'
+                // },500,'swing');
+            },
+            lock:function(){
+                $("body").removeClass("unlocked").addClass("locked");
+            },
+            unlock:function(){
+                $("body").removeClass("locked").addClass("unlocked");
             }
         },
         UI:{
