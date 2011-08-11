@@ -50,13 +50,14 @@
     <section id="container">
       <section class="locked">
         <div class="outer">
-          <form action="/unlock" method="post" accept-charset="utf-8">
+          <form action="/unlock" name="security" method="post" accept-charset="utf-8">
             <label for="pincode">Enter device pin-code</label>
             <input type="password" name="pincode" maxlength="4" size="4">
             <!-- <input type="submit" value="Unlock"> -->
             <p>Enter your device pin-code to unlock this messages</p>
           </form>
           <!-- <a href="#" onclick="PopUp.Actions.unlock();">Unlock</a> -->
+          <hr/>
         </div>
       </section>
       <section class="unlocked">

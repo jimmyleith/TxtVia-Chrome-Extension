@@ -9,10 +9,14 @@ PopUp = (function(){
             if(localStorage.authToken){
                 $("body").removeClass("firstLaunch").addClass("main");
             }
+            $("form#security").submit(function(e){
+               e.preventDefault();
+            });
             $("input[type=password][name=pincode]").bind("keyup", function(e){
                 console.log($(this).val());
                 if(parseInt($(this).val(),10) === 1234){
                     console.log("unlock");
+                    $(this).val("");
                     PopUp.Actions.unlock();
                 }
             });
