@@ -3,93 +3,102 @@
 <head>
   <meta charset="utf-8">
   <title>TxtVia</title>
+  <style>
+    body{
+      width:360px;
+      height:460px;
+    }
+  </style>
   <link rel="stylesheet" href="css/popup.css">
 </head>
 
-<body class="firstLaunch">
-  <section class="firstLaunch">
-    <div class="outer">
-      <section class="welcome">
-        <div class="middle">
-          <img src="images/icon256.png">
-          <h2>TxtVia</h2>
-          <p>Thank you for installing TxtVia</p>
-          <a href="#" onclick="$('body').removeClass('welcome').addClass('steps')">Continue</a>
+<body class="main">
+  <section class="globalWapper">
+    <section class="firstLaunch">
+      <div class="outer">
+        <section class="welcome">
+          <div class="middle">
+            <img src="images/icon256.png">
+            <h2>TxtVia</h2>
+            <p>Thank you for installing TxtVia</p>
+            <a href="#" onclick="$('body').removeClass('welcome').addClass('steps')">Continue</a>
           
-        </div>
-      </section>
-      <section class="steps">
-        <h2>It's as easy as&hellip;</h2>
-        <ol>
-          <li><h3>Login</h3>
-            <p>Use your favourite account to login.</p>
-          </li>
-          <li><h3>Download App</h3>
-            <p><a href="#">Google Android</a></p>
-            <p class="coming-soon"><a href="#">Apple iPhone</a></p>
-          </li>
-          <li><h3>Enjoy</h3>
-            <p>Send messages to your friends and family keeping your own number.</p>
-          </li>
-        </ol>
-        <a href="#" onclick="$('body').removeClass('firstLaunch').addClass('main')">Continue</a>
-        
-      </section>
-    </div>
-  </section>
-  <section class="main">
-    <header class="clearfix">
-      <select name="device">
-      </select>
-      <input type="search" name="contacts" placeholder="Contact Search" autofocus results="5">
-      <a href="#" id="showSettings" class="ir">Show Settings</a>
-      <nav id="settings">
-
-      </nav>
-    </header>
-    <section id="container">
-      <section class="locked">
-        <div class="outer">
-          <form action="/unlock" name="security" method="post" accept-charset="utf-8">
-            <label for="pincode">Enter device pin-code</label>
-            <input type="password" name="pincode" maxlength="4" size="4">
-            <!-- <input type="submit" value="Unlock"> -->
-            <p>Enter your device pin-code to unlock this messages</p>
-          </form>
-          <!-- <a href="#" onclick="PopUp.Actions.unlock();">Unlock</a> -->
-          <hr/>
-        </div>
-      </section>
-      <section class="unlocked">
-        <section id="threads" class="threads">
-          <!-- <a href="#" onclick="PopUp.Actions.lock();">lock</a> -->
-          <ul>
-            <li class="new_message" onclick="PopUp.Actions.gotToThread();">
-              <h3>New Message</h3>
-            </li>
-          </ul>
-          <footer>
-            
-          </footer>
-        </section>
-  
-        <section id="thread" class="thread">
-          <header class="clearfix">
-            <a href="#" onclick="PopUp.Actions.backToThreads();">Back</a>
-            <hgroup>
-              <img src="http://placehold.it/30x30">
-              <h3>New Message</h3>
-            </hgroup>
-          </header>
-          <div class="scroll">
-            <ol class="messages">
-            </ol>
           </div>
-          <form action="/create_message" id="new_message" method="post" class="clearfix">
-            <input type="hidden" name="recipient" value="+447575790552">
-            <textarea name="body" cols="50" rows="4"></textarea>
-            <input type="submit" value="Send" disabled=disabled> 
-          </form>
+        </section>
+        <section class="steps">
+          <h2>It's as easy as&hellip;</h2>
+          <ol>
+            <li><h3><a href="#" onclick="PopUp.Actions.loginLink();">Login</a></h3>
+              <p>Use your favourite account to login.</p>
+            </li>
+            <li><h3>Sync App</h3>
+              <p><a href="#">Google Android</a></p>
+              <p class="coming-soon"><a href="#"><s>Apple iPhone</s></a></p>
+            </li>
+            <li><h3>Enjoy</h3>
+              <p>Get texting.</p>
+            </li>
+          </ol>
+          <a href="#" onclick="$('body').removeClass('firstLaunch').addClass('main')">Continue</a>
+        
+        </section>
+      </div>
+    </section>
+    <section class="main">
+      <header class="clearfix">
+        <select name="device">
+        </select>
+        <input type="search" name="contacts" placeholder="Contact Search" autofocus results="5">
+        <a href="#" id="showSettings" class="ir">Show Settings</a>
+        <nav id="settings">
+          <a href="#">Options</a>
+          <hr>
+        </nav>
+      </header>
+      <section id="container">
+        <section class="locked">
+          <div class="outer">
+            <form action="/unlock" name="security" method="post" accept-charset="utf-8">
+              <label for="pincode">Enter TxtVia pin-code</label>
+              <input type="password" name="pincode" maxlength="4" size="4" pattern="[0-9]{4}">
+              <!-- <input type="submit" value="Unlock"> -->
+              <p>Enter your pin-code to unlock this messages</p>
+            </form>
+            <!-- <a href="#" onclick="PopUp.Actions.unlock();">Unlock</a> -->
+            <hr/>
+          </div>
+        </section>
+        <section class="unlocked">
+          <section id="threads" class="threads">
+            <!-- <a href="#" onclick="PopUp.Actions.lock();">lock</a> -->
+            <ul>
+              <li class="new_message" onclick="PopUp.Actions.gotToThread(true);">
+                <h3>New Message</h3>
+              </li>
+            </ul>
+            <footer>
+            
+            </footer>
+          </section>
+  
+          <section id="thread" class="thread">
+            <header class="clearfix">
+              <a href="#" onclick="PopUp.Actions.backToThreads();">Back</a>
+              <hgroup>
+                <img src="http://placehold.it/30x30">
+                <h3>New Message</h3>
+              </hgroup>
+            </header>
+            <div class="scroll">
+              <ol class="messages">
+              </ol>
+            </div>
+            <form action="/create_message" id="new_message" method="post" class="clearfix">
+              <input type="hidden" name="recipient" value="+447575790552">
+              <textarea name="body" cols="50" rows="4"></textarea>
+              <input type="submit" value="Send" disabled=disabled> 
+            </form>
+          </section>
         </section>
       </section>
     </section>

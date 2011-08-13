@@ -1,20 +1,32 @@
-PopUp = (function(){
+PopUp = (function() {
     return {
-        init:function(){
+        init: function() {
             TxtVia.init();
             PopUp.RegisterEvents.submitForm();
             PopUp.RegisterEvents.display();
             PopUp.RegisterEvents.validateForm();
             PopUp.Process.view();
-            if(localStorage.authToken){
-                $("body").removeClass("firstLaunch").addClass("main");
+            if (TxtVia.Storage.devices.length > 0) {
+                $("body").removeClass("firstLaunch").addClass("main").addClass("loaded");
+                $(".steps ol li:eq(0)").addClass("done");
+            } else {
+                $("body").removeClass('main').addClass("firstLaunch");
+                if(JSON.parse(localStorage.clientId) !== 0){
+                    $("body").addClass("steps");
+                    $(".steps ol li:eq(0)").addClass("done");
+                }
+                setTimeout(function() {
+                    $("body").addClass("loaded");
+                },
+                500);
             }
-            $("form#security").submit(function(e){
-               e.preventDefault();
+            $("form#security").submit(function(e) {
+                e.preventDefault();
             });
-            $("input[type=password][name=pincode]").bind("keyup", function(e){
+            $("input[type=password][name=pincode]").bind("keyup",
+            function(e) {
                 console.log($(this).val());
-                if(parseInt($(this).val(),10) === 1234){
+                if (parseInt($(this).val(), 10) === 1234) {
                     console.log("unlock");
                     $(this).val("");
                     PopUp.Actions.unlock();
@@ -22,11 +34,11 @@ PopUp = (function(){
             });
             // window.addEventListener("storage",PopUp.Event.storage,false);
         },
-        Event:{
-          storage:function(e){
-              console.log("storage accessed:"+ e.key);
-              
-/*
+        Event: {
+            storage: function(e) {
+                console.log("storage accessed:" + e.key);
+
+                /*
               switch(e.key){
                   case "devices":
                     PopUp.UI.deviceList();
@@ -36,142 +48,166 @@ PopUp = (function(){
                   break;
               }*/
 
-          }  
+            }
         },
-        Process:{
-            view:function(){
+        Process: {
+            view: function() {
                 PopUp.UI.deviceList();
                 PopUp.Process.threads();
-                if(Thread.list()[0]){
+                if (Thread.list()[0]) {
                     PopUp.Process.thread(Thread.list()[0].recipient);
                 }
                 $("input[type=search]").autocomplete({
                     source: Contact.data,
-                    select:function(e,ui){
+                    select: function(e, ui) {
                         $("form input[name=recipient]").val(ui.item.value);
                     }
                 });
                 $("form").removeClass("loading");
                 PopUp.UI.displayEnv();
             },
-            threads:function(){
+            threads: function() {
                 $("#threads ul li:not(.new_message)").remove();
-                $.each(Thread.list(),function(index){
-                   var li = $("<li>",{
-                       'class':'clearfix',
-                       'id':'threadID'+index
-                   }),
-                   img = $("<img>",{
-                       src:'/images/user_profile_image50.png'
-                   }),
-                   h3 = $("<h3>",{
-                       text: Contact.lookup(this.recipient)
-                   }),
-                   p = $("<p>",{
-                       text: this.messages[this.messages.length-1].message.body
-                   }), 
-                   recipient = this.recipient;
+                $.each(Thread.list(),
+                function(index) {
+                    var li = $("<li>", {
+                        'class': 'clearfix',
+                        'id': 'threadID' + index
+                    }),
+                    img = $("<img>", {
+                        src: '/images/user_profile_image50.png'
+                    }),
+                    h3 = $("<h3>", {
+                        text: Contact.lookup(this.recipient)
+                    }),
+                    p = $("<p>", {
+                        text: this.messages[this.messages.length - 1].message.body
+                    }),
+                    recipient = this.recipient;
 
-                   li.append(img).append(h3).append(p);
-                   li.bind("click",function(){
-                       // console.log("clicked");
-                       PopUp.Process.thread(recipient);
-                       PopUp.Actions.gotToThread();
-                   });
-                   
-                   $("#threads ul").append(li);
+                    li.append(img).append(h3).append(p);
+                    li.bind("click",
+                    function() {
+                        // console.log("clicked");
+                        PopUp.Process.thread(recipient);
+                        PopUp.Actions.gotToThread();
+                    });
+
+                    $("#threads ul").append(li);
 
                 });
             },
-            thread:function(recipient){
+            thread: function(recipient) {
                 var header = $(".thread header hgroup h3").html(Contact.lookup(recipient)),
-                img = $(".thread header img",{
-                    src:"/images/user_profile_image30.png"
+                img = $(".thread header img", {
+                    src: "/images/user_profile_image30.png"
                 });
                 header.append(img);
                 $("form input[name=recipient]").val(recipient);
                 $(".thread ol").empty();
                 console.log(recipient);
-                $.each(Thread.messages(recipient),function(){
-                    
-                   var li = $("<li>",{
-                       'class': this.message.sent_at ? "sent" : "received",
-                       html: this.message.body + "&nbsp;"
-                   }),
-                   time = $("<time>",{
-                       datetime: $.timeago(this.message.sent_at ? this.message.sent_at : this.message.received_at),
-                       html: $.timeago(this.message.sent_at ? this.message.sent_at : this.message.received_at)
-                   });
-                   li.append(time);
-                   time.timeago();
-                   $(".thread ol").append(li);
+                $.each(Thread.messages(recipient),
+                function() {
+
+                    var li = $("<li>", {
+                        'class': this.message.sent_at ? "sent": "received",
+                        html: this.message.body + "&nbsp;"
+                    }),
+                    time = $("<time>", {
+                        datetime: $.timeago(this.message.sent_at ? this.message.sent_at: this.message.received_at),
+                        html: $.timeago(this.message.sent_at ? this.message.sent_at: this.message.received_at)
+                    });
+                    li.append(time);
+                    time.timeago();
+                    $(".thread ol").append(li);
 
                 });
                 $(".thread .scroll").animate({
-                    scrollTop:$(".thread .scroll").height()
+                    scrollTop: $(".thread .scroll").height()
                 });
             }
-            
+
         },
         RegisterEvents: {
-            display:function(){
-                var login = $("<a>",{
-                    href:"#",
-                    text:"Login"
+            display: function() {
+                var login = $("<a>", {
+                    href: "#",
+                    text: "Login"
                 }),
-                logout = $("<a>",{
-                    href:"#",
-                    text:"Logout"
+                logout = $("<a>", {
+                    href: "#",
+                    text: "Logout"
                 });
-                if(localStorage.authToken !== ""){
+                if (localStorage.authToken !== "") {
                     $("header nav").append(logout);
-                    logout.bind("click",function(){
-                        PopUp.Actions.logoutLink();   
+                    logout.bind("click",
+                    function() {
+                        PopUp.Actions.logoutLink();
                     });
-                }else{
+                } else {
                     $("header nav").append(login);
-                    login.bind("click",function(){
-                        PopUp.Actions.loginLink();   
+                    login.bind("click",
+                    function() {
+                        PopUp.Actions.loginLink();
                     });
                 }
-                $("#showSettings").bind("click",function(){
+                $("#showSettings").bind("click",
+                function() {
                     $("#settings").fadeIn();
                 });
-                $("#showSettings").bind("mouseleave",function(){
-                    if(window.settingTimeout){
+                $("#showSettings").bind("mouseleave",
+                function() {
+                    if (window.settingTimeout) {
                         clearTimeout(window.settingTimeout);
                     }
-                    window.settingTimeout = setTimeout(function(){
+                    window.settingTimeout = setTimeout(function() {
                         $("#settings").fadeOut();
-                    },3000);
+                    },
+                    3000);
                 });
             },
-            validateForm:function(){
-                $("textarea").bind("keyup",function(){
-                    if($(this).val() === ""){
-                        $("form#new_message").find("input[type=submit]").attr("disabled","disabled");
-                    }else{
+            validateForm: function() {
+                $("textarea").bind("keyup",
+                function() {
+                    if ($(this).val() === "") {
+                        $("form#new_message").find("input[type=submit]").attr("disabled", "disabled");
+                    } else {
                         $("form#new_message").find("input[type=submit]").removeAttr("disabled");
-                        
+
                     }
                 });
             },
-            submitForm:function(){
-                $("form#new_message").bind("submit",function(e){
+            submitForm: function() {
+                $("form#new_message").bind("submit",
+                function(e) {
+                    var self = $(this);
                     $("form#new_message").addClass("loading");
-                    
+
                     // append message to pendingQueue
                     var pendingMessages = $.parseJSON(localStorage.pendingMessages),
-                    item = {"data":$(this).serialize()},
-                    body_p = $("<p>",{
-                        text:$(this).find(":input[name='body']").val()
+                    item = {
+                        "data": $(this).serialize()
+                    },
+                    body_p = $("<p>", {
+                        text: $(this).find(":input[name='body']").val()
                     }),
-                    header = $("<header>",{
-                        text:$(this).find(":input[name='recipient']").val()
+                    header = $("<header>", {
+                        text: $(this).find(":input[name='recipient']").val()
                     }),
                     article = $("<article>").append(header).append(body_p);
-                    
+
                     $("#sent .messages").append(article);
+
+
+                    var li = $("<li>", {
+                        'class': "sent sending",
+                        html: self.find("textarea").val() + "&nbsp;"
+                    }),
+                    time = $("<time>", {
+                        html: "sending&hellip;"
+                    });
+                    li.append(time);
+                    $(".thread ol").append(li);
 
                     pendingMessages.push(item);
                     localStorage.pendingMessages = JSON.stringify(pendingMessages);
@@ -182,40 +218,46 @@ PopUp = (function(){
             }
         },
         Actions: {
-            loginLink:function(){
+            loginLink: function() {
                 window.close();
-                chrome.tabs.create({
-                    url:TxtVia.url + '/sign_in?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
-                });
-                 // url:TxtVia.url + '/sign_in?app_identifier=' + TxtVia.appID + '&app_type=chrome'
-                
+                if(chrome.tabs){
+                    chrome.tabs.create({
+                        url: TxtVia.url + '/sign_in?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
+                    });
+                }else{
+                    window.open(TxtVia.url + '/sign_in?return_url=' + window.location.href);
+                }
+                // url:TxtVia.url + '/sign_in?app_identifier=' + TxtVia.appID + '&app_type=chrome'
             },
-            logoutLink:function(){
+            logoutLink: function() {
                 window.close();
                 localStorage.authToken = "";
                 localStorage.clientId = 0;
                 chrome.tabs.create({
-                    url:TxtVia.url + '/sign_out'
+                    url: TxtVia.url + '/sign_out'
                 });
             },
-            backToThreads:function(){
+            backToThreads: function() {
                 $("body").removeClass("thread").addClass("threads");
                 // $(".threads").animate({
                 //    left:'0%',
-                //    right:'0%' 
+                //    right:'0%'
                 // },500,'swing');
                 // $(".thread").animate({
                 //     left:'100%',
                 //     right:'-100%'
                 // },500,'swing');
             },
-            gotToThread:function(){
+            gotToThread: function(empty) {
+                if(empty){
+                    $(".threads ol").empty();
+                }
                 $("body").removeClass("threads").addClass("thread");
                 // $(".threads").css({
                 //     width:$(".threads").width()
                 // }).animate({
                 //    left:'-100%',
-                //    right:'100%' 
+                //    right:'100%'
                 // },500,'swing');
                 // $(".thread").css({
                 //     width:$(".threads").width()
@@ -224,29 +266,31 @@ PopUp = (function(){
                 //     right:'0%'
                 // },500,'swing');
             },
-            lock:function(){
+            lock: function() {
                 $("body").removeClass("unlocked").addClass("locked");
             },
-            unlock:function(){
+            unlock: function() {
                 $("body").removeClass("locked").addClass("unlocked");
             }
         },
-        UI:{
-            alert:function(){
+        UI: {
+            alert: function() {
                 alert("MESSAGE< MESSAGE< MESSAGE");
             },
-            displayEnv:function(){
-                if(TxtVia.env !== "production" || TxtVia.env === undefined){
+            displayEnv: function() {
+                if (TxtVia.env !== "production" || TxtVia.env === undefined) {
                     $(".threads footer").html("Running in " + TxtVia.env + " mode");
                 }
             },
-            deviceList:function(){
+            deviceList: function() {
                 $("select[name=device]").empty();
-                $.each(JSON.parse(localStorage.devices),function(){
+                $.each(JSON.parse(localStorage.devices),
+                function() {
                     console.log(this);
-                    $("select[name=device]").append($("<option>",{
-                        text:this.device.name,
-                        value:this.device.id
+                    $("body").removeClass("firstLaunch steps").addClass("main");
+                    $("select[name=device]").append($("<option>", {
+                        text: this.device.name,
+                        value: this.device.id
                     }));
                 });
             }
