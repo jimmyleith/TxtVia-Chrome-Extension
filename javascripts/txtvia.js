@@ -230,8 +230,12 @@ var TxtVia = (function() {
         connection: {
             establish: function() {
                 if (!TxtVia.server && localStorage.authToken && TxtVia.webSocketID) {
-                    TxtVia.server = new Pusher(TxtVia.webSocketID.toString(), 'txtvia_' + localStorage.authToken);
-                    TxtVia.server.bind('messages',
+                    Pusher.channel_auth_endpoint = TxtVia.url + "/users/auth/client/";
+                    // TxtVia.server = new Pusher(TxtVia.webSocketID.toString(), 'txtvia_' + localStorage.authToken);
+                    TxtVia.server = new Pusher(TxtVia.webSocketID.toString());
+                    // TxtVia.channel = TxtVia.server.subscribe("private-txtvia");
+                    TxtVia.channel = TxtVia.server.subscribe('txtvia_' + localStorage.authToken);
+                    TxtVia.channel.bind('messages',
                     function(data) {
                         try {
                             data.message.read = false;
@@ -255,7 +259,7 @@ var TxtVia = (function() {
                         }
                     });
 
-                    TxtVia.server.bind('devices',
+                    TxtVia.channel.bind('devices',
                     function(data) {
                         try {
                             TxtVia.Storage.devices.push(data);
