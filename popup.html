@@ -9,10 +9,11 @@
       height:460px;
     }
   </style>
+  <link rel="stylesheet" href="css/defaults.css">
   <link rel="stylesheet" href="css/popup.css">
 </head>
 
-<body class="main">
+<body class="main unlocked">
   <section class="globalWapper">
     <section class="firstLaunch">
       <div class="outer">
@@ -49,13 +50,13 @@
         <select name="device">
         </select>
         <input type="search" name="contacts" placeholder="Contact Search" autofocus results="5">
-        <a href="#" id="showSettings" class="ir">Show Settings</a>
-        <nav id="settings">
+        <a href="#" class="showSettings ir">Show Settings</a>
+        <nav class="settings">
           <a href="#">Options</a>
           <hr>
         </nav>
       </header>
-      <section id="container">
+      <section class="container">
         <section class="locked">
           <div class="outer">
             <form action="/unlock" name="security" method="post" accept-charset="utf-8">

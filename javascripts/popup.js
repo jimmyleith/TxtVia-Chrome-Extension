@@ -25,9 +25,7 @@ PopUp = (function() {
             });
             $("input[type=password][name=pincode]").bind("keyup",
             function(e) {
-                console.log($(this).val());
                 if (parseInt($(this).val(), 10) === 1234) {
-                    console.log("unlock");
                     $(this).val("");
                     PopUp.Actions.unlock();
                 }
@@ -58,7 +56,7 @@ PopUp = (function() {
                     PopUp.Process.thread(Thread.list()[0].recipient);
                 }
                 $("input[type=search]").autocomplete({
-                    source: Contact.data,
+                    source: JSON.parse(localStorage.contacts),
                     select: function(e, ui) {
                         $("form input[name=recipient]").val(ui.item.value);
                     }

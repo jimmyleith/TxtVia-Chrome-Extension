@@ -180,6 +180,10 @@ var TxtVia = (function() {
                     localStorage.devices = JSON.stringify([]);
                     // window.addEventListener("storage", handle_storage, false);
                 }
+                if (!localStorage.contacts) {
+                    localStorage.contacts = JSON.stringify([]);
+                    // window.addEventListener("storage", handle_storage, false);
+                }
                 if (!localStorage.unReadMessages) {
                     localStorage.unReadMessages = 0;
                 }
@@ -222,7 +226,22 @@ var TxtVia = (function() {
                         }
                     }
                 });
+                $.ajax({
+                   url: TxtVia.url + "/contacts.json?auth_token=" + localStorage.authToken,
+                   type: "GET",
+                   dataType: "json",
+                   success: function(data){
+                       console.log(data);
+                       if (data){
+                           localStorage.contacts = JSON.stringify(data);
+                           // if (window.PopUp){
+                           //     PopUp.UI.contacts();
+                           // }
+                       }
+                   }
+                });
             },
+            contacts: $.parseJSON(localStorage.contacts),
             devices: $.parseJSON(localStorage.devices),
             messages: $.parseJSON(localStorage.messages),
             authToken: localStorage.authToken
