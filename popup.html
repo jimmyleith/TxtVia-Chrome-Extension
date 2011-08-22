@@ -6,7 +6,7 @@
   <style>
     body{
       width:360px;
-      height:460px;
+      height:480px;
     }
   </style>
   <link rel="stylesheet" href="css/defaults.css">
@@ -14,15 +14,16 @@
 </head>
 
 <body class="main unlocked">
+
   <section class="globalWapper">
     <section class="firstLaunch">
       <div class="outer">
         <section class="welcome">
           <div class="middle">
-            <img src="images/icon256.png">
+            <img src="images/icon128.png">
             <h2>TxtVia</h2>
             <p>Thank you for installing TxtVia</p>
-            <a href="#" onclick="$('body').removeClass('welcome').addClass('steps')">Continue</a>
+            <button onclick="$('body').removeClass('welcome').addClass('steps')">Continue</button>
           
           </div>
         </section>
@@ -40,7 +41,7 @@
               <p>Get texting.</p>
             </li>
           </ol>
-          <a href="#" onclick="$('body').removeClass('firstLaunch').addClass('main')">Continue</a>
+          <button onclick="$('body').removeClass('firstLaunch').addClass('main')">Continue</button>
         
         </section>
       </div>
@@ -49,11 +50,9 @@
       <header class="clearfix">
         <select name="device">
         </select>
-        <input type="search" name="contacts" placeholder="Contact Search" autofocus results="5">
+        <input type="search" name="contacts" placeholder="Contact Search" autofocus>
         <a href="#" class="showSettings ir">Show Settings</a>
         <nav class="settings">
-          <a href="#">Options</a>
-          <hr>
         </nav>
       </header>
       <section class="container">
@@ -86,8 +85,7 @@
             <header class="clearfix">
               <a href="#" onclick="PopUp.Actions.backToThreads();">Back</a>
               <hgroup>
-                <img src="http://placehold.it/30x30">
-                <h3>New Message</h3>
+                <input type="tel" required>
               </hgroup>
             </header>
             <div class="scroll">
@@ -104,6 +102,7 @@
       </section>
     </section>
   </section>
+  <progress id="syncBar" value="0" max="4"></progress>
   <script src="http://js.pusherapp.com/1.5/pusher.min.js"></script>
   
   <script src="javascripts/jquery.js"></script>

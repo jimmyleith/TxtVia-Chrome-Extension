@@ -6,11 +6,13 @@
              "48": "images/icon48.png",
             "128": "images/icon128.png" },
   "homepage_url":"http://txtvia.com",
+  
   "browser_action":{
     "default_icon":"images/icon16.png",
     "default_title":"TxtVia",
     "default_popup":"popup.html"
   },
+/*  "options_page":"http://txtvia.com/users/options",*/
   "background_page":"background.html",
   "permissions": [
     "notifications",

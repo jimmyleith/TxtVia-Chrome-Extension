@@ -2,9 +2,12 @@ PopUp = (function() {
     return {
         init: function() {
             TxtVia.init();
+            localStorage.unReadMessages = 0;
+            TxtVia.Notification.messageCountClear();
             PopUp.RegisterEvents.submitForm();
             PopUp.RegisterEvents.display();
             PopUp.RegisterEvents.validateForm();
+            
             PopUp.Process.view();
             if (TxtVia.Storage.devices.length > 0) {
                 $("body").removeClass("firstLaunch").addClass("main").addClass("loaded");
@@ -56,9 +59,14 @@ PopUp = (function() {
                     PopUp.Process.thread(Thread.list()[0].recipient);
                 }
                 $("input[type=search]").autocomplete({
-                    source: JSON.parse(localStorage.contacts),
+                    source: TxtVia.Storage.contacts,
                     select: function(e, ui) {
+                        $("body").removeClass("threads").addClass("thread");
+                        $("input[type=search]").val(ui.item.label);
                         $("form input[name=recipient]").val(ui.item.value);
+                        PopUp.UI.displayContact(ui.item);
+                        // $(".thread header hgroup h3").html(ui.item.label);
+                        // $(".thread header hgroup img").attr('src', ui.item.avatar);
                     }
                 });
                 $("form").removeClass("loading");
@@ -73,16 +81,15 @@ PopUp = (function() {
                         'id': 'threadID' + index
                     }),
                     img = $("<img>", {
-                        src: '/images/user_profile_image50.png'
+                        src: Contact.lookup(this.recipient).avatar
                     }),
                     h3 = $("<h3>", {
-                        text: Contact.lookup(this.recipient)
+                        html: Contact.lookup(this.recipient).label
                     }),
                     p = $("<p>", {
                         text: this.messages[this.messages.length - 1].message.body
                     }),
                     recipient = this.recipient;
-
                     li.append(img).append(h3).append(p);
                     li.bind("click",
                     function() {
@@ -96,14 +103,16 @@ PopUp = (function() {
                 });
             },
             thread: function(recipient) {
-                var header = $(".thread header hgroup h3").html(Contact.lookup(recipient)),
-                img = $(".thread header img", {
-                    src: "/images/user_profile_image30.png"
+                var header = $("<h3>",{
+                    text:Contact.lookup(recipient).label
+                }),
+                img = $("<img>", {
+                    src: Contact.lookup(recipient).avatar
                 });
-                header.append(img);
+                
+                $(".thread header hgroup").empty().append(img).append(header);
                 $("form input[name=recipient]").val(recipient);
                 $(".thread ol").empty();
-                console.log(recipient);
                 $.each(Thread.messages(recipient),
                 function() {
 
@@ -130,12 +139,27 @@ PopUp = (function() {
             display: function() {
                 var login = $("<a>", {
                     href: "#",
-                    text: "Login"
+                    text: "Login",
+                    click:function(){
+                        PopUp.Actions.loginLink();
+                    }
                 }),
                 logout = $("<a>", {
                     href: "#",
-                    text: "Logout"
+                    text: "Logout",
+                    click:function(){
+                        PopUp.Actions.logoutLink();
+                    }
+                }),
+                hr = $("<hr>"),
+                sync = $("<a>",{
+                    href: "#",
+                    text:"Sync",
+                    click:function(){
+                        PopUp.Actions.syncLink();
+                    }
                 });
+                $("header nav").empty().append(sync).append(hr);
                 if (localStorage.authToken !== "") {
                     $("header nav").append(logout);
                     logout.bind("click",
@@ -149,20 +173,25 @@ PopUp = (function() {
                         PopUp.Actions.loginLink();
                     });
                 }
-                $("#showSettings").bind("click",
+
+                $("a.showSettings").bind("click",
                 function() {
-                    $("#settings").fadeIn();
+                    $(".settings:not(:visible)").fadeIn();
                 });
-                $("#showSettings").bind("mouseleave",
+                $(".settings a").click(function(){
+                    $(".settings:visible").fadeOut();
+                });
+                $(".settings").bind("mouseleave",
                 function() {
                     if (window.settingTimeout) {
                         clearTimeout(window.settingTimeout);
                     }
                     window.settingTimeout = setTimeout(function() {
-                        $("#settings").fadeOut();
+                        $(".settings:visible").fadeOut();
                     },
                     3000);
                 });
+
             },
             validateForm: function() {
                 $("textarea").bind("keyup",
@@ -217,7 +246,6 @@ PopUp = (function() {
         },
         Actions: {
             loginLink: function() {
-                window.close();
                 if(chrome.tabs){
                     chrome.tabs.create({
                         url: TxtVia.url + '/sign_in?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
@@ -225,44 +253,34 @@ PopUp = (function() {
                 }else{
                     window.open(TxtVia.url + '/sign_in?return_url=' + window.location.href);
                 }
+                window.close();
                 // url:TxtVia.url + '/sign_in?app_identifier=' + TxtVia.appID + '&app_type=chrome'
             },
             logoutLink: function() {
-                window.close();
                 localStorage.authToken = "";
                 localStorage.clientId = 0;
                 chrome.tabs.create({
                     url: TxtVia.url + '/sign_out'
                 });
+                window.close();
+            },
+            syncLink: function(){
+                TxtVia.Storage.download();
             },
             backToThreads: function() {
                 $("body").removeClass("thread").addClass("threads");
-                // $(".threads").animate({
-                //    left:'0%',
-                //    right:'0%'
-                // },500,'swing');
-                // $(".thread").animate({
-                //     left:'100%',
-                //     right:'-100%'
-                // },500,'swing');
             },
             gotToThread: function(empty) {
                 if(empty){
-                    $(".threads ol").empty();
+                    $(".thread ol").empty();
+                    var input = $("<input>",{
+                       type:"tel",
+                       required:true,
+                       placeholder:"Mobile Phone Number"
+                    });
+                    $(".thread header hgroup").empty().html(input);
                 }
                 $("body").removeClass("threads").addClass("thread");
-                // $(".threads").css({
-                //     width:$(".threads").width()
-                // }).animate({
-                //    left:'-100%',
-                //    right:'100%'
-                // },500,'swing');
-                // $(".thread").css({
-                //     width:$(".threads").width()
-                // }).animate({
-                //     left:'0%',
-                //     right:'0%'
-                // },500,'swing');
             },
             lock: function() {
                 $("body").removeClass("unlocked").addClass("locked");
@@ -272,6 +290,16 @@ PopUp = (function() {
             }
         },
         UI: {
+            displayContact:function(contact){
+                var img = $("<img>",{
+                    src: contact.avatar
+                }),
+                header = $("<h3>",{
+                    text: contact.label
+                });
+                
+                $(".thread header hgroup").empty().append(img).append(header);
+            },
             alert: function() {
                 alert("MESSAGE< MESSAGE< MESSAGE");
             },
@@ -284,12 +312,13 @@ PopUp = (function() {
                 $("select[name=device]").empty();
                 $.each(JSON.parse(localStorage.devices),
                 function() {
-                    console.log(this);
                     $("body").removeClass("firstLaunch steps").addClass("main");
-                    $("select[name=device]").append($("<option>", {
-                        text: this.device.name,
-                        value: this.device.id
-                    }));
+                    if(this.device.device_type != "client"){
+                        $("select[name=device]").append($("<option>", {
+                            text: this.device.name,
+                            value: this.device.id
+                        }));
+                    }
                 });
             }
         }

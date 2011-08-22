@@ -5,7 +5,7 @@ var TxtVia = (function() {
             TxtVia.Storage.setup();
             TxtVia.connection.establish();
 
-            if (chrome) {
+            if (window.chrome) {
                 try {
                     TxtVia.appID = chrome.i18n.getMessage("@@extension_id");
                 } catch(eer) {
@@ -39,7 +39,7 @@ var TxtVia = (function() {
                 if (TxtVia.getParams("auth_token")) {
                     console.log("got new auth_token");
                     localStorage.authToken = TxtVia.getParams("auth_token");
-                    TxtVia.Process.setupDevice();
+                    TxtVia.Storage.download();
                 }
             } catch(e) {}
 
@@ -82,11 +82,29 @@ var TxtVia = (function() {
                 ).show();
                 localStorage.unReadMessages = parseInt(localStorage.unReadMessages, 10) + 1;
 
-                if (chrome) {
+                if (window.chrome) {
                     (function() {
-                        var text = localStorage.unReadMessages;
-                        if (text === 0) {
+                        var value = parseInt(localStorage.unReadMessages,10);
+                        if (value === 0) {
                             text = "";
+                        }else{
+                            text = value;
+                        }
+                        // wap
+                        chrome.browserAction.setBadgeText({
+                            text: text.toString()
+                        });
+                    })();
+                }
+            },
+            messageCountClear: function(){
+                if (window.chrome) {
+                    (function() {
+                        var value = parseInt(localStorage.unReadMessages,10);
+                        if (value === 0) {
+                            text = "";
+                        }else{
+                            text = value;
                         }
                         // wap
                         chrome.browserAction.setBadgeText({
@@ -203,6 +221,26 @@ var TxtVia = (function() {
                 }
             },
             download: function() {
+                $.ajaxSetup({
+                    beforeSend:function(){
+                        
+                        $("progress").fadeIn("fast").val(1);
+                    },
+                    complete:function(){
+                        $("progress").val(4).delay(1000).fadeOut("fast");
+                    }
+                });
+                $.ajax({
+                   url: TxtVia.url + "/contacts.json?auth_token=" + localStorage.authToken,
+                   type: "GET",
+                   dataType: "json",
+                   success: function(data){
+                       console.log(data);
+                       if (data){
+                           localStorage.contacts = JSON.stringify(data);
+                       }
+                   }
+                });
                 $.ajax({
                     url: TxtVia.url + "/messages.json?auth_token=" + localStorage.authToken,
                     type: "GET",
@@ -225,20 +263,6 @@ var TxtVia = (function() {
                             }
                         }
                     }
-                });
-                $.ajax({
-                   url: TxtVia.url + "/contacts.json?auth_token=" + localStorage.authToken,
-                   type: "GET",
-                   dataType: "json",
-                   success: function(data){
-                       console.log(data);
-                       if (data){
-                           localStorage.contacts = JSON.stringify(data);
-                           // if (window.PopUp){
-                           //     PopUp.UI.contacts();
-                           // }
-                       }
-                   }
                 });
             },
             contacts: $.parseJSON(localStorage.contacts),
