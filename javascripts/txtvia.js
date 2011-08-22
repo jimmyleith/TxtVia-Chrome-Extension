@@ -45,7 +45,24 @@ var TxtVia = (function() {
 
             // Doesn't work on chrome :(
             window.addEventListener("storage", TxtVia.Event.storage, false);
-
+            $.ajaxSetup({
+                beforeSend:function(){
+                    $("progress").fadeIn("fast").val(1);
+                },
+                error:function(e,txt){
+                    if(e.status === 401){
+                        localStorage.authToken = "";
+                        localStorage.clientId = 0;
+                        alert("You're not authenicated, please sign in.");
+                        chrome.tabs.create({
+                            url: TxtVia.url + '/sign_out'
+                        });
+                    }
+                },
+                complete:function(){
+                    $("progress").val(4).delay(1000).fadeOut("fast");
+                }
+            });
         },
         getParams: function(name) {
             var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -154,7 +171,7 @@ var TxtVia = (function() {
             pendingMessages: function() {
                 // ajax post to server
                 var pendingMessages = $.parseJSON(localStorage.pendingMessages);
-                if (pendingMessages.length > 0 && window.navigator.onLine) {
+                if (pendingMessages.length > 0 && window.navigator.onLine && localStorage.authToken) {
                     console.log("preparing to send message");
                     $.ajax({
                         url: TxtVia.url + "/messages.json",
@@ -221,15 +238,6 @@ var TxtVia = (function() {
                 }
             },
             download: function() {
-                $.ajaxSetup({
-                    beforeSend:function(){
-                        
-                        $("progress").fadeIn("fast").val(1);
-                    },
-                    complete:function(){
-                        $("progress").val(4).delay(1000).fadeOut("fast");
-                    }
-                });
                 $.ajax({
                    url: TxtVia.url + "/contacts.json?auth_token=" + localStorage.authToken,
                    type: "GET",

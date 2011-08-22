@@ -278,6 +278,10 @@ PopUp = (function() {
                        required:true,
                        placeholder:"Mobile Phone Number"
                     });
+                    input.bind('keyup',function(){
+                       $("form input[name=recipient]").val(this.value);
+                    });
+                    $("form input[name=recipient]").val("");
                     $(".thread header hgroup").empty().html(input);
                 }
                 $("body").removeClass("threads").addClass("thread");
@@ -304,7 +308,7 @@ PopUp = (function() {
                 alert("MESSAGE< MESSAGE< MESSAGE");
             },
             displayEnv: function() {
-                if (TxtVia.env !== "production" || TxtVia.env === undefined) {
+                if (TxtVia.env !== undefined) {
                     $(".threads footer").html("Running in " + TxtVia.env + " mode");
                 }
             },
