@@ -17,7 +17,7 @@ var TxtVia = (function() {
                 TxtVia.appName = "Unknown Client";
             }
 
-            TxtVia.env = "development";
+            // TxtVia.env = "development";
             switch (TxtVia.env) {
             case "development":
                 TxtVia.url = "http://localhost:8080";
