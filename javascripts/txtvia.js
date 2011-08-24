@@ -3,6 +3,7 @@ var TxtVia = (function() {
         init: function() {
 
             TxtVia.Storage.setup();
+            TxtVia.Process.setupDevice();
             TxtVia.connection.establish();
 
             if (window.chrome) {
@@ -46,20 +47,37 @@ var TxtVia = (function() {
             // Doesn't work on chrome :(
             window.addEventListener("storage", TxtVia.Event.storage, false);
             $.ajaxSetup({
-                beforeSend:function(){
+                beforeSend: function() {
                     $("progress").fadeIn("fast").val(1);
                 },
-                error:function(e,txt){
-                    if(e.status === 401){
+                error: function(e, txt) {
+                    if (e.status === 401) {
                         localStorage.authToken = "";
                         localStorage.clientId = 0;
-                        alert("You're not authenicated, please sign in.");
-                        chrome.tabs.create({
-                            url: TxtVia.url + '/sign_out'
-                        });
+                        if(window.PopUp){
+                            PopUp.UI.flash("red","You've been logged out, please re-authenticate.");
+                        }
+                        PopUp.Actions.loginLink();
+                        // $.ajax({
+                        //     url:TxtVia.url + "/sign_out",
+                        //     type:"GET",
+                        //     dataType: "html",
+                        //     crossDomain: true,
+                        //     cache: false,
+                        //     async: false,
+                        //     beforeSend:function(){
+                        //       console.log("reauthing");  
+                        //     },
+                        //     success:function(){
+                        //         chrome.tabs.create({
+                        //             url: TxtVia.url + '/sign_in'
+                        //         });
+                        //     }
+                        // });
+
                     }
                 },
-                complete:function(){
+                complete: function() {
                     $("progress").val(4).delay(1000).fadeOut("fast");
                 }
             });
@@ -101,10 +119,10 @@ var TxtVia = (function() {
 
                 if (window.chrome) {
                     (function() {
-                        var value = parseInt(localStorage.unReadMessages,10);
+                        var value = parseInt(localStorage.unReadMessages, 10);
                         if (value === 0) {
                             text = "";
-                        }else{
+                        } else {
                             text = value;
                         }
                         // wap
@@ -114,13 +132,13 @@ var TxtVia = (function() {
                     })();
                 }
             },
-            messageCountClear: function(){
+            messageCountClear: function() {
                 if (window.chrome) {
                     (function() {
-                        var value = parseInt(localStorage.unReadMessages,10);
+                        var value = parseInt(localStorage.unReadMessages, 10);
                         if (value === 0) {
                             text = "";
-                        }else{
+                        } else {
                             text = value;
                         }
                         // wap
@@ -236,18 +254,19 @@ var TxtVia = (function() {
                         window.addEventListener("storage", PopUp.UI.alert, false);
                     }
                 }
+
             },
             download: function() {
                 $.ajax({
-                   url: TxtVia.url + "/contacts.json?auth_token=" + localStorage.authToken,
-                   type: "GET",
-                   dataType: "json",
-                   success: function(data){
-                       console.log(data);
-                       if (data){
-                           localStorage.contacts = JSON.stringify(data);
-                       }
-                   }
+                    url: TxtVia.url + "/contacts.json?auth_token=" + localStorage.authToken,
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        console.log(data);
+                        if (data) {
+                            localStorage.contacts = JSON.stringify(data);
+                        }
+                    }
                 });
                 $.ajax({
                     url: TxtVia.url + "/messages.json?auth_token=" + localStorage.authToken,
@@ -317,13 +336,22 @@ var TxtVia = (function() {
                             console.log("Device Data Received");
                             console.log(data);
                             localStorage.devices = JSON.stringify(TxtVia.Storage.devices);
-                            if(window.PopUp){
+                            if (window.PopUp) {
                                 PopUp.UI.deviceList();
                             }
                         } catch(e) {
                             console.error("something gone wrong with getting the data from WebSocket");
                             console.error(e);
                         }
+                    });
+
+                    TxtVia.channel.bind("subscription_error",
+                    function(status) {
+                        alert("Failed to subscribe to channel, close and reopen application.");
+                    });
+                    TxtVia.channel.bind('failed',
+                    function() {
+                        alert("You're missing out on some cool stuff. Try a better browser.");
                     });
 
                     // Put device pusher here.

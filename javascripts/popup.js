@@ -9,22 +9,28 @@ PopUp = (function() {
             PopUp.RegisterEvents.validateForm();
             
             PopUp.Process.view();
-            if (TxtVia.Storage.devices.length > 0) {
-                $("body").removeClass("firstLaunch").addClass("main").addClass("loaded");
-                $(".steps ol li:eq(0)").addClass("done");
-            } else {
-                $("body").removeClass('main').addClass("firstLaunch");
-                if(JSON.parse(localStorage.clientId) !== 0){
-                    $("body").addClass("steps");
+            $(function(){
+                if (TxtVia.Storage.devices.length > 0) {
+                    $("body").removeClass("firstLaunch").addClass("main").addClass("loaded");
                     $(".steps ol li:eq(0)").addClass("done");
+                } else {
+                    $("body").removeClass('main').addClass("firstLaunch");
+                    if(JSON.parse(localStorage.clientId) !== 0){
+                        $("body").addClass("steps");
+                        $(".steps ol li:eq(0)").addClass("done");
+                    }
+                    setTimeout(function() {
+                        console.log("loaded");
+                        $("body").addClass("loaded");
+                    },
+                    500);
                 }
-                setTimeout(function() {
-                    $("body").addClass("loaded");
-                },
-                500);
-            }
+            });
             $("form#security").submit(function(e) {
                 e.preventDefault();
+            });
+            $("input[type=search]").focus(function(){
+                $(this).val("");
             });
             $("input[type=password][name=pincode]").bind("keyup",
             function(e) {
@@ -33,6 +39,7 @@ PopUp = (function() {
                     PopUp.Actions.unlock();
                 }
             });
+
             // window.addEventListener("storage",PopUp.Event.storage,false);
         },
         Event: {
@@ -53,18 +60,23 @@ PopUp = (function() {
         },
         Process: {
             view: function() {
+                console.log("Rendering View");
                 PopUp.UI.deviceList();
                 PopUp.Process.threads();
                 if (Thread.list()[0]) {
                     PopUp.Process.thread(Thread.list()[0].recipient);
                 }
+
                 $("input[type=search]").autocomplete({
                     source: TxtVia.Storage.contacts,
                     select: function(e, ui) {
+                        e.preventDefault();
                         $("body").removeClass("threads").addClass("thread");
-                        $("input[type=search]").val(ui.item.label);
+                        $("input[type=search]").val(ui.item.label).blur();
+                        $("form#new_message textarea").focus();
                         $("form input[name=recipient]").val(ui.item.value);
-                        PopUp.UI.displayContact(ui.item);
+                        // PopUp.UI.displayContact(ui.item);
+                        PopUp.Process.thread(ui.item.value);
                         // $(".thread header hgroup h3").html(ui.item.label);
                         // $(".thread header hgroup img").attr('src', ui.item.avatar);
                     }
@@ -73,6 +85,7 @@ PopUp = (function() {
                 PopUp.UI.displayEnv();
             },
             threads: function() {
+                console.log("Rendering Threads");
                 $("#threads ul li:not(.new_message)").remove();
                 $.each(Thread.list(),
                 function(index) {
@@ -93,7 +106,7 @@ PopUp = (function() {
                     li.append(img).append(h3).append(p);
                     li.bind("click",
                     function() {
-                        // console.log("clicked");
+                        console.log("Opening Thread " + recipient);
                         PopUp.Process.thread(recipient);
                         PopUp.Actions.gotToThread();
                     });
@@ -103,6 +116,7 @@ PopUp = (function() {
                 });
             },
             thread: function(recipient) {
+                console.log("Rendering Thread " + recipient);
                 var header = $("<h3>",{
                     text:Contact.lookup(recipient).label
                 }),
@@ -162,16 +176,8 @@ PopUp = (function() {
                 $("header nav").empty().append(sync).append(hr);
                 if (localStorage.authToken !== "") {
                     $("header nav").append(logout);
-                    logout.bind("click",
-                    function() {
-                        PopUp.Actions.logoutLink();
-                    });
                 } else {
                     $("header nav").append(login);
-                    login.bind("click",
-                    function() {
-                        PopUp.Actions.loginLink();
-                    });
                 }
 
                 $("a.showSettings").bind("click",
@@ -205,41 +211,50 @@ PopUp = (function() {
                 });
             },
             submitForm: function() {
+                $("form#new_message textarea").keydown(function(e){
+                    // alert(e.keyCode);
+                   if((e.ctrlKey || e.metaKey) && e.keyCode == 13){
+                       $("form#new_message").trigger('submit');
+                   } 
+                });
+                
                 $("form#new_message").bind("submit",
                 function(e) {
                     var self = $(this);
-                    $("form#new_message").addClass("loading");
+                    if($("form#new_message textarea").val().length > 0){
+                        $("form#new_message").addClass("loading");
+                    
+                        // append message to pendingQueue
+                        var pendingMessages = $.parseJSON(localStorage.pendingMessages),
+                        item = {
+                            "data": $(this).serialize()
+                        },
+                        body_p = $("<p>", {
+                            text: $(this).find(":input[name='body']").val()
+                        }),
+                        header = $("<header>", {
+                            text: $(this).find(":input[name='recipient']").val()
+                        }),
+                        article = $("<article>").append(header).append(body_p);
 
-                    // append message to pendingQueue
-                    var pendingMessages = $.parseJSON(localStorage.pendingMessages),
-                    item = {
-                        "data": $(this).serialize()
-                    },
-                    body_p = $("<p>", {
-                        text: $(this).find(":input[name='body']").val()
-                    }),
-                    header = $("<header>", {
-                        text: $(this).find(":input[name='recipient']").val()
-                    }),
-                    article = $("<article>").append(header).append(body_p);
-
-                    $("#sent .messages").append(article);
+                        $("#sent .messages").append(article);
 
 
-                    var li = $("<li>", {
-                        'class': "sent sending",
-                        html: self.find("textarea").val() + "&nbsp;"
-                    }),
-                    time = $("<time>", {
-                        html: "sending&hellip;"
-                    });
-                    li.append(time);
-                    $(".thread ol").append(li);
+                        var li = $("<li>", {
+                            'class': "sent sending",
+                            html: self.find("textarea").val() + "&nbsp;"
+                        }),
+                        time = $("<time>", {
+                            html: "sending&hellip;"
+                        });
+                        li.append(time);
+                        $(".thread ol").append(li);
 
-                    pendingMessages.push(item);
-                    localStorage.pendingMessages = JSON.stringify(pendingMessages);
-                    $(this).find("textarea").val("");
-                    TxtVia.Process.pendingMessages();
+                        pendingMessages.push(item);
+                        localStorage.pendingMessages = JSON.stringify(pendingMessages);
+                        $(this).find("textarea").val("");
+                        TxtVia.Process.pendingMessages();
+                    }
                     e.preventDefault();
                 });
             }
@@ -312,9 +327,39 @@ PopUp = (function() {
                     $(".threads footer").html("Running in " + TxtVia.env + " mode");
                 }
             },
+            flash:function(state, message){
+                function show(){
+                    $(".flash").removeClass('red yellow green');
+                    switch(state){
+                        case 'red':
+                            $(".flash").addClass('red');
+                        break;
+                        case 'yellow':
+                            $(".flash").addClass('yellow');
+                        break;
+                        case 'green':
+                            $(".flash").addClass('green');
+                        break;
+                    }
+                    $(".flash").html(message)
+                    .slideDown()
+                    .click(function(){
+                        $(this).slideUp();
+                    });
+                    
+                }
+                if($(".flash").is(':visible')){
+                    $(".flash").slideUp(function(){
+                        show();
+                    });
+                }else{
+                    show();
+                }
+            },
             deviceList: function() {
+                console.log("Rendering Device List");
                 $("select[name=device]").empty();
-                $.each(JSON.parse(localStorage.devices),
+                $.each(TxtVia.Storage.devices,
                 function() {
                     $("body").removeClass("firstLaunch steps").addClass("main");
                     if(this.device.device_type != "client"){

@@ -5,11 +5,15 @@ var Thread = (function(){
             people = [];
             conversations = [];
             $.each(all_messages,function(i){
-                var message = this;
-                people.push(message.message.recipient.toString());
+                var message = this,
+                value = message.message.recipient.toString();
+                if($.inArray(value, people) == -1){
+                    people.push(value);
+                }
                 
             });
-            people = $.unique(people);
+            console.log(people);
+            // people = $.unique(people);
             
             $.each(people, function(){
                 conversation = {"recipient":this.toString(), "messages":Thread.messages(this.toString()) };

@@ -1,6 +1,6 @@
 {
   "name":"TxtVia",
-  "version":"1.0",
+  "version":"1.0.1",
   "description":"Send SMS messages from your phone using the web browser.",
   "icons": { "16": "images/icon16.png",
              "48": "images/icon48.png",
@@ -12,20 +12,11 @@
     "default_title":"TxtVia",
     "default_popup":"popup.html"
   },
-/*  "options_page":"http://txtvia.com/users/options",*/
   "background_page":"background.html",
   "permissions": [
     "notifications",
     "management",
     "http://txtvia.com/",
-    "https://txtvia.com/",
-    "http://txtvia.co.uk/",
-    "https://txtvia.co.uk/"/*,
-        
-        "http://txtvia.heroku.com/",
-        "http://staging.txtvia.com/",
-        "http://txtvia-staging.heroku.com/",
-        "http://localhost:8080/",
-        "http://localhost/"*/
+    "http://txtvia.co.uk/"
   ]
 }
