@@ -12,8 +12,6 @@ var Thread = (function(){
                 }
                 
             });
-            console.log(people);
-            // people = $.unique(people);
             
             $.each(people, function(){
                 conversation = {"recipient":this.toString(), "messages":Thread.messages(this.toString()) };

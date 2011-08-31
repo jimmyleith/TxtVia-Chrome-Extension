@@ -34,8 +34,8 @@
               <p>Use your favourite account to login.</p>
             </li>
             <li><h3>Sync App</h3>
-              <p><a href="#">Google Android</a></p>
-              <p class="coming-soon"><a href="#"><s>Apple iPhone</s></a></p>
+              <p><a href="#" onclick="PopUp.Actions.download('android');">Google Android</a></p>
+              <!-- <p class="coming-soon"><a href="#"><abbr>Apple iPhone <small>Coming Soon</small></abbr></a></p> -->
             </li>
             <li><h3>Enjoy</h3>
               <p>Get texting.</p>
@@ -58,12 +58,12 @@
       <section class="container">
         <section class="locked">
           <div class="outer">
-            <form action="/unlock" name="security" method="post" accept-charset="utf-8">
+            <!-- <form action="/unlock" name="security" method="post" accept-charset="utf-8">
               <label for="pincode">Enter TxtVia pin-code</label>
               <input type="password" name="pincode" maxlength="4" size="4" pattern="[0-9]{4}">
-              <!-- <input type="submit" value="Unlock"> -->
               <p>Enter your pin-code to unlock this messages</p>
-            </form>
+            </form> -->
+            <a href="#" onclick="PopUp.Actions.loginLink();" class="login">Login Now</a>
             <!-- <a href="#" onclick="PopUp.Actions.unlock();">Unlock</a> -->
             <hr/>
           </div>
@@ -103,12 +103,13 @@
       </section>
     </section>
   </section>
-  <progress id="syncBar" value="0" max="4"></progress>
+  <div class="loader"></div>
   <script src="http://js.pusherapp.com/1.5/pusher.min.js"></script>
   
   <script src="javascripts/jquery.js"></script>
   <script src="javascripts/jquery-ui-1.8.14.custom.min.js"></script>
   <script src="javascripts/jquery.timeago.js"></script>
+  <script src="javascripts/spin.js"></script>
   <script src="javascripts/txtvia.js"></script>
   <script src="javascripts/contact.js"></script>
   <script src="javascripts/thread.js"></script>

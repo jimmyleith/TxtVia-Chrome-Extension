@@ -1,11 +1,6 @@
 var TxtVia = (function() {
     return {
         init: function() {
-
-            TxtVia.Storage.setup();
-            TxtVia.Process.setupDevice();
-            TxtVia.connection.establish();
-
             if (window.chrome) {
                 try {
                     TxtVia.appID = chrome.i18n.getMessage("@@extension_id");
@@ -19,6 +14,7 @@ var TxtVia = (function() {
             }
 
             // TxtVia.env = "development";
+            // TxtVia.env = "staging";
             switch (TxtVia.env) {
             case "development":
                 TxtVia.url = "http://localhost:8080";
@@ -33,6 +29,9 @@ var TxtVia = (function() {
                 TxtVia.webSocketID = "c0f2d772bdcdd2e04aa3";
                 break;
             }
+            TxtVia.Storage.setup();
+            TxtVia.Process.setupDevice();
+            TxtVia.connection.establish();
 
             // Start worker
             setInterval(TxtVia.Process.pendingMessages, 5000);
@@ -48,7 +47,20 @@ var TxtVia = (function() {
             window.addEventListener("storage", TxtVia.Event.storage, false);
             $.ajaxSetup({
                 beforeSend: function() {
-                    $("progress").fadeIn("fast").val(1);
+                    var opts = {
+                      lines: 12, // The number of lines to draw
+                      length: 0, // The length of each line
+                      width: 4, // The line thickness
+                      radius: 10, // The radius of the inner circle
+                      color: '#fff', // #rbg or #rrggbb
+                      speed: 1, // Rounds per second
+                      trail: 100, // Afterglow percentage
+                      shadow: true // Whether to render a shadow
+                    };
+                    if(typeof(Spinner) === 'function'){
+                        var spinner = new Spinner(opts).spin();
+                        $('.loader').append(spinner.el);
+                    }
                 },
                 error: function(e, txt) {
                     if (e.status === 401) {
@@ -78,7 +90,7 @@ var TxtVia = (function() {
                     }
                 },
                 complete: function() {
-                    $("progress").val(4).delay(1000).fadeOut("fast");
+                    $(".loader").empty();
                 }
             });
         },
@@ -184,6 +196,9 @@ var TxtVia = (function() {
                             alert("Railed to register Client with TxtVia");
                         }
                     });
+                }else{
+                    TxtVia.connection.establish();
+                    TxtVia.Storage.download();
                 }
             },
             pendingMessages: function() {
@@ -262,7 +277,6 @@ var TxtVia = (function() {
                     type: "GET",
                     dataType: "json",
                     success: function(data) {
-                        console.log(data);
                         if (data) {
                             localStorage.contacts = JSON.stringify(data);
                         }
@@ -275,8 +289,6 @@ var TxtVia = (function() {
                     success: function(data) {
                         // should we delete and download a fresh set of messages?
                         // in this case, yes!
-                        console.log(data.devices);
-                        console.log(data.messages);
                         if (data.devices) {
                             localStorage.devices = JSON.stringify(data.devices);
                             if (window.PopUp) {
@@ -361,4 +373,3 @@ var TxtVia = (function() {
         }
     };
 })();
-TxtVia.init();

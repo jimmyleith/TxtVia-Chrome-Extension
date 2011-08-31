@@ -2,20 +2,21 @@ PopUp = (function() {
     return {
         init: function() {
             TxtVia.init();
+            TxtVia.Process.setupDevice();
             localStorage.unReadMessages = 0;
             TxtVia.Notification.messageCountClear();
             PopUp.RegisterEvents.submitForm();
             PopUp.RegisterEvents.display();
             PopUp.RegisterEvents.validateForm();
-            
+
             PopUp.Process.view();
-            $(function(){
-                if (TxtVia.Storage.devices.length > 0) {
+            $(function() {
+                if ($.parseJSON(localStorage.devices).length > 0) {
                     $("body").removeClass("firstLaunch").addClass("main").addClass("loaded");
                     $(".steps ol li:eq(0)").addClass("done");
                 } else {
                     $("body").removeClass('main').addClass("firstLaunch");
-                    if(JSON.parse(localStorage.clientId) !== 0){
+                    if (JSON.parse(localStorage.clientId) !== 0) {
                         $("body").addClass("steps");
                         $(".steps ol li:eq(0)").addClass("done");
                     }
@@ -29,7 +30,7 @@ PopUp = (function() {
             $("form#security").submit(function(e) {
                 e.preventDefault();
             });
-            $("input[type=search]").focus(function(){
+            $("input[type=search]").focus(function() {
                 $(this).val("");
             });
             $("input[type=password][name=pincode]").bind("keyup",
@@ -39,6 +40,12 @@ PopUp = (function() {
                     PopUp.Actions.unlock();
                 }
             });
+            if (localStorage.authToken === "") {
+                $("body").removeClass('unlocked').addClass('locked');
+            } else {
+                $("body").addClass("steps");
+                $(".steps li:eq(0)").addClass('done');
+            }
 
             // window.addEventListener("storage",PopUp.Event.storage,false);
         },
@@ -68,7 +75,7 @@ PopUp = (function() {
                 }
 
                 $("input[type=search]").autocomplete({
-                    source: TxtVia.Storage.contacts,
+                    source: $.parseJSON(localStorage.contacts),
                     select: function(e, ui) {
                         e.preventDefault();
                         $("body").removeClass("threads").addClass("thread");
@@ -93,8 +100,9 @@ PopUp = (function() {
                         'class': 'clearfix',
                         'id': 'threadID' + index
                     }),
+                    avatar = Contact.lookup(this.recipient).avatar ? Contact.lookup(this.recipient).avatar: '/images/user_profile_image50.png',
                     img = $("<img>", {
-                        src: Contact.lookup(this.recipient).avatar
+                        src: avatar
                     }),
                     h3 = $("<h3>", {
                         html: Contact.lookup(this.recipient).label
@@ -117,13 +125,14 @@ PopUp = (function() {
             },
             thread: function(recipient) {
                 console.log("Rendering Thread " + recipient);
-                var header = $("<h3>",{
-                    text:Contact.lookup(recipient).label
+                var header = $("<h3>", {
+                    text: Contact.lookup(recipient).label
                 }),
+                avatar = Contact.lookup(this.recipient).avatar ? Contact.lookup(this.recipient).avatar: '/images/user_profile_image30.png',
                 img = $("<img>", {
-                    src: Contact.lookup(recipient).avatar
+                    src: avatar
                 });
-                
+
                 $(".thread header hgroup").empty().append(img).append(header);
                 $("form input[name=recipient]").val(recipient);
                 $(".thread ol").empty();
@@ -154,22 +163,22 @@ PopUp = (function() {
                 var login = $("<a>", {
                     href: "#",
                     text: "Login",
-                    click:function(){
+                    click: function() {
                         PopUp.Actions.loginLink();
                     }
                 }),
                 logout = $("<a>", {
                     href: "#",
                     text: "Logout",
-                    click:function(){
+                    click: function() {
                         PopUp.Actions.logoutLink();
                     }
                 }),
                 hr = $("<hr>"),
-                sync = $("<a>",{
+                sync = $("<a>", {
                     href: "#",
-                    text:"Sync",
-                    click:function(){
+                    text: "Sync",
+                    click: function() {
                         PopUp.Actions.syncLink();
                     }
                 });
@@ -184,7 +193,7 @@ PopUp = (function() {
                 function() {
                     $(".settings:not(:visible)").fadeIn();
                 });
-                $(".settings a").click(function(){
+                $(".settings a").click(function() {
                     $(".settings:visible").fadeOut();
                 });
                 $(".settings").bind("mouseleave",
@@ -211,19 +220,19 @@ PopUp = (function() {
                 });
             },
             submitForm: function() {
-                $("form#new_message textarea").keydown(function(e){
+                $("form#new_message textarea").keydown(function(e) {
                     // alert(e.keyCode);
-                   if((e.ctrlKey || e.metaKey) && e.keyCode == 13){
-                       $("form#new_message").trigger('submit');
-                   } 
+                    if ((e.ctrlKey || e.metaKey) && e.keyCode == 13) {
+                        $("form#new_message").trigger('submit');
+                    }
                 });
-                
+
                 $("form#new_message").bind("submit",
                 function(e) {
                     var self = $(this);
-                    if($("form#new_message textarea").val().length > 0){
+                    if ($("form#new_message textarea").val().length > 0) {
                         $("form#new_message").addClass("loading");
-                    
+
                         // append message to pendingQueue
                         var pendingMessages = $.parseJSON(localStorage.pendingMessages),
                         item = {
@@ -261,11 +270,11 @@ PopUp = (function() {
         },
         Actions: {
             loginLink: function() {
-                if(chrome.tabs){
+                if (chrome.tabs) {
                     chrome.tabs.create({
                         url: TxtVia.url + '/sign_in?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
                     });
-                }else{
+                } else {
                     window.open(TxtVia.url + '/sign_in?return_url=' + window.location.href);
                 }
                 window.close();
@@ -279,22 +288,38 @@ PopUp = (function() {
                 });
                 window.close();
             },
-            syncLink: function(){
+            download: function(app) {
+                switch (app) {
+                case 'android':
+                    chrome.tabs.create({
+                       url: TxtVia.url + '/downloads/android' 
+                    });
+                    break;
+                case 'iphone':
+                    alert("Not available yet, please keep upto date on twitter @txtvia");
+                    break;
+                case 'blackberry':
+                    alert("Not available yet, please keep upto date on twitter @txtvia");
+                    break;
+                }
+            },
+            syncLink: function() {
                 TxtVia.Storage.download();
             },
             backToThreads: function() {
                 $("body").removeClass("thread").addClass("threads");
             },
             gotToThread: function(empty) {
-                if(empty){
+                if (empty) {
                     $(".thread ol").empty();
-                    var input = $("<input>",{
-                       type:"tel",
-                       required:true,
-                       placeholder:"Mobile Phone Number"
+                    var input = $("<input>", {
+                        type: "tel",
+                        required: true,
+                        placeholder: "Mobile Phone Number"
                     });
-                    input.bind('keyup',function(){
-                       $("form input[name=recipient]").val(this.value);
+                    input.bind('keyup',
+                    function() {
+                        $("form input[name=recipient]").val(this.value);
                     });
                     $("form input[name=recipient]").val("");
                     $(".thread header hgroup").empty().html(input);
@@ -309,14 +334,14 @@ PopUp = (function() {
             }
         },
         UI: {
-            displayContact:function(contact){
-                var img = $("<img>",{
+            displayContact: function(contact) {
+                var img = $("<img>", {
                     src: contact.avatar
                 }),
-                header = $("<h3>",{
+                header = $("<h3>", {
                     text: contact.label
                 });
-                
+
                 $(".thread header hgroup").empty().append(img).append(header);
             },
             alert: function() {
@@ -327,42 +352,42 @@ PopUp = (function() {
                     $(".threads footer").html("Running in " + TxtVia.env + " mode");
                 }
             },
-            flash:function(state, message){
-                function show(){
+            flash: function(state, message) {
+                function show() {
                     $(".flash").removeClass('red yellow green');
-                    switch(state){
-                        case 'red':
-                            $(".flash").addClass('red');
+                    switch (state) {
+                    case 'red':
+                        $(".flash").addClass('red');
                         break;
-                        case 'yellow':
-                            $(".flash").addClass('yellow');
+                    case 'yellow':
+                        $(".flash").addClass('yellow');
                         break;
-                        case 'green':
-                            $(".flash").addClass('green');
+                    case 'green':
+                        $(".flash").addClass('green');
                         break;
                     }
                     $(".flash").html(message)
                     .slideDown()
-                    .click(function(){
+                    .click(function() {
                         $(this).slideUp();
                     });
-                    
+
                 }
-                if($(".flash").is(':visible')){
-                    $(".flash").slideUp(function(){
+                if ($(".flash").is(':visible')) {
+                    $(".flash").slideUp(function() {
                         show();
                     });
-                }else{
+                } else {
                     show();
                 }
             },
             deviceList: function() {
                 console.log("Rendering Device List");
                 $("select[name=device]").empty();
-                $.each(TxtVia.Storage.devices,
+                $.each($.parseJSON(localStorage.devices),
                 function() {
                     $("body").removeClass("firstLaunch steps").addClass("main");
-                    if(this.device.device_type != "client"){
+                    if (this.device.device_type != "client") {
                         $("select[name=device]").append($("<option>", {
                             text: this.device.name,
                             value: this.device.id
