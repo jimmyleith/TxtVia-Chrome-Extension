@@ -101,19 +101,24 @@ var PopUp = (function () {
                 console.log("Rendering View");
                 PopUp.UI.deviceList();
                 PopUp.Process.threads();
-                $("input[type=search]").autocomplete({
-                    source: $.parseJSON(localStorage.contacts),
-                    select: function (e, ui) {
-                        e.preventDefault();
-                        $("body").removeClass("threads").addClass("thread");
-                        $("input[type=search]").val(ui.item.label).blur();
-                        $("form#new_message textarea").focus();
-                        $("form input[name=recipient]").val(ui.item.value);
-                        PopUp.Process.thread(ui.item.value);
-                    }
-                });
+                
                 $("form").removeClass("loading");
                 PopUp.UI.displayEnv();
+            },
+            contacts:function(){
+                TxtVia.WebDB.getContacts(function (data) {
+                    $("input[type=search]").autocomplete({
+                        source: data,
+                        select: function (e, ui) {
+                            e.preventDefault();
+                            $("body").removeClass("threads").addClass("thread");
+                            $("input[type=search]").val(ui.item.label).blur();
+                            $("form#new_message textarea").focus();
+                            $("form input[name=recipient]").val(ui.item.value);
+                            PopUp.Process.thread(ui.item.value);
+                        }
+                    });
+                });
             },
             threads: function () {
                 console.log("Rendering Threads");
@@ -145,7 +150,7 @@ var PopUp = (function () {
             thread: function (conversation, callback) {
 
                 var header = $("<h3>", {
-                    text: conversation.name + "(" + conversation.recipient + ")"
+                    text: conversation.name
                 }),
                     avatar = chrome.extension.getURL('/images/user_profile_image.png'),
                     img = $("<img>", {
