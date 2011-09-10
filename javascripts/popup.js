@@ -1,25 +1,29 @@
+/*globals $, TxtVia, chrome,localStorage,console,alert,window,setTimeout,setInterval,clearTimeout */
+
+/**
+ * @depend storage.js
+ **/
 var PopUp = (function () {
     return {
         init: function () {
             TxtVia.init();
-            PopUp.Check.firstLaunch(function(){
-                PopUp.Check.authToken(function(){
-                    PopUp.Check.client(function(){
+            PopUp.Check.firstLaunch(function () {
+                PopUp.Check.authToken(function () {
+                    PopUp.Check.client(function () {
                         PopUp.Check.devices();
                     });
                 });
             });
-            
-            $(window).load(function(){
+
+            $(window).load(function () {
                 $("body").addClass("loaded");
             });
-            
+
             PopUp.RegisterEvents.submitForm();
             PopUp.RegisterEvents.display();
             PopUp.RegisterEvents.validateForm();
-            
-            // PopUp.Process.view();
 
+            // PopUp.Process.view();
             $("form#security").submit(function (e) {
                 e.preventDefault();
             });
@@ -36,19 +40,19 @@ var PopUp = (function () {
         },
         Check: {
             tries: 0,
-            firstLaunch:function(callback){
+            firstLaunch: function (callback) {
                 if ($.parseJSON(localStorage.firstLaunch) === true) {
                     localStorage.firstLaunch = false;
                     console.log('[PopUp.Init] First Launch');
                     $("body").addClass("firstLaunch").removeClass("unlocked main steps");
-                    setTimeout(callback,2000);
+                    setTimeout(callback, 2000);
                 } else {
                     callback();
                     console.log('[PopUp.Init] Normal Launch');
                     $("body").removeClass('firstLaunch');
                 }
             },
-            authToken: function(callback){
+            authToken: function (callback) {
                 if (localStorage.authToken === "") {
                     console.log('[PopUp.Init] No Auth Token');
                     $("body").removeClass('main unlocked').addClass('locked').addClass("steps");
@@ -58,34 +62,36 @@ var PopUp = (function () {
                     callback();
                 }
             },
-            client: function(callback){
+            client: function (callback) {
                 if ($.parseJSON(localStorage.clientId) !== 0) {
                     console.log('[PopUp.Init] Client not registered');
                     $("body").removeClass('main');
                     $(".steps ol li:eq(0)").removeClass("done");
-                }else{
+                } else {
                     console.log('[PopUp.Init] Client registered');
                     $(".steps ol li:eq(0)").addClass("done");
                     callback();
                 }
             },
-            devices: function(){
-                if(PopUp.Check.tries < 5){
-                    TxtVia.WebDB.getDevices(function(t,r){
-                        if(r.rows.length === 0){
+            devices: function () {
+                if (PopUp.Check.tries < 5) {
+                    TxtVia.WebDB.getDevices(function (t, r) {
+                        if (r.rows.length === 0) {
                             console.log('[PopUp.Init] No devices');
-                            chrome.extension.sendRequest({sync: true}, function(){
+                            chrome.extension.sendRequest({
+                                sync: true
+                            }, function () {
                                 PopUp.Check.devices();
                             });
                             $("body").removeClass('main').addClass("steps");
-                        }else{
+                        } else {
                             console.log('[PopUp.Init] ' + r.rows.length + ' devices registered');
                             PopUp.Process.view();
                             $("body").addClass("main").removeClass('steps');
                             $(".steps ol li:eq(0)").addClass("done");
                         }
                     });
-                }else{
+                } else {
                     console.log("[PopUp.Check.devices] exceeded max tries.");
                 }
             }
@@ -235,7 +241,7 @@ var PopUp = (function () {
             submitForm: function () {
                 $("form#new_message textarea").keydown(function (e) {
                     // alert(e.keyCode);
-                    if ((e.ctrlKey || e.metaKey) && e.keyCode == 13) {
+                    if ((e.ctrlKey || e.metaKey) && e.keyCode === 13) {
                         $("form#new_message").trigger('submit');
                     }
                 });
@@ -314,7 +320,9 @@ var PopUp = (function () {
                 }
             },
             syncLink: function () {
-                chrome.extension.sendRequest({sync: true}, function(){
+                chrome.extension.sendRequest({
+                    sync: true
+                }, function () {
                     console.log("comeplete");
                 });
             },
@@ -393,12 +401,12 @@ var PopUp = (function () {
             deviceList: function () {
                 console.log("Rendering Device List");
                 $("select[name=device]").empty();
-                TxtVia.WebDB.getDevices(function(t,r){
+                TxtVia.WebDB.getDevices(function (t, r) {
                     var i, device;
-                    for(i=0;i<r.rows.length;i++){
+                    for (i = 0; i < r.rows.length; i++) {
                         device = r.rows.item(i);
                         $("body").removeClass("firstLaunch steps").addClass("main");
-                        if (device.device_type != "client") {
+                        if (device.device_type !== "client") {
                             $("select[name=device]").append($("<option>", {
                                 text: device.name,
                                 value: device.id
@@ -409,5 +417,5 @@ var PopUp = (function () {
             }
         }
     };
-})();
+}());
 PopUp.init();

@@ -1,5 +1,7 @@
-/*jslint bitwise:true, devel:true, newcap:true, nomen:true, onevar:true, plusplus:true, regexp:true */
-/*globals Pusher, TxtVia, localStorage */
+/*globals $, TxtVia, chrome, webkitNotifications, Pusher, Beacon, localStorage,console,window,setTimeout,setInterval,clearTimeout */
+/**
+ * @depend storage.js
+ **/
 
 var Background = {};
 Background.init = function () {
@@ -9,7 +11,6 @@ Background.init = function () {
     }
     try {
         chrome.extension.onRequest.addListener(function (request, sender, callback) {
-            console.log("request received from" + sender );
             if (request.sync) {
                 Background.Process.fullDownload(callback);
             } else {
@@ -18,7 +19,7 @@ Background.init = function () {
         });
     } catch (e) {
         console.error("[Background.init] onRequest listener failed");
-    
+
     }
     Background.connection();
     Background.Process.Post.messages();
@@ -27,7 +28,7 @@ Background.init = function () {
 Background.isError = false;
 Background.Process = {
     isError: false,
-    completed:0
+    completed: 0
 };
 Background.Process.Post = {};
 Background.Process.Post.messages = function () {
@@ -102,14 +103,14 @@ Background.Process.Get.contacts = function () {
         success: function (data) {
             if (data) {
                 $.each(data, function () {
-                    contact = {
+                    var contact = {
                         name: this.label,
                         number: this.value
                     };
                     TxtVia.WebDB.insertInto.contacts(contact, null);
                 });
             }
-            Background.Process.completed=Background.Process.completed+1;
+            Background.Process.completed = Background.Process.completed + 1;
         },
         error: function (e) {
             console.error("[Background.Process.Get.contacts] failed : " + e.responseText);
@@ -127,7 +128,7 @@ Background.Process.Get.messages = function () {
             $.each(data.messages, function () {
                 TxtVia.WebDB.insertInto.messages(this);
             });
-            Background.Process.completed=Background.Process.completed+1;
+            Background.Process.completed = Background.Process.completed + 1;
         },
         error: function (e) {
             console.error("[Background.Process.Get.messages] failed : " + e.responseText);
@@ -151,19 +152,18 @@ Background.Process.fullDownload = function (callback) {
     Background.Process.completed = 0;
     Background.Process.Get.contacts();
     Background.Process.Get.messages();
-    var cb = callback,
-    to = setInterval(function(){
-        if(Background.Process.completed >=2){
-            clearTimeout(to);
-            // if(cb !== false){
-                Background.notify.syncComplete();
-            // }
-            if(cb){
-                cb();
+    function reDo(){
+        if (Background.Process.completed >= 2) {
+            Background.notify.syncComplete();
+            if (callback) {
+                callback();
             }
             Background.Process.completed = 0;
+        } else {
+            setTimeout(reDo, 500);
         }
-    },500);
+    }
+    reDo();
 };
 
 Background.notify = {};
