@@ -1,4 +1,5 @@
 @charset "UTF-8";
+@import 'defaults.css';
 html {
 background: #48525C url(../images/background.jpg) repeat center center;
   min-width: 360px;
@@ -171,7 +172,8 @@ left: -100%;
 right: 100%;
 position: absolute;
 }
-body.firstLaunch section.main {
+body.firstLaunch section.main,
+body.steps section.main {
 left: 100%;
 right: -100%;
 position: absolute;

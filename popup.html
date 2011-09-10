@@ -2,15 +2,16 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>TxtVia</title>
+  <title>TxtVia Chrome</title>
   <style>
     body{
       width:360px;
       height:480px;
     }
   </style>
-  <link rel="stylesheet" href="css/defaults.css">
-  <link rel="stylesheet" href="css/popup.css">
+  <!-- CSS concatenated and minified via ant build script-->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- end CSS-->
 </head>
 
 <body class="main unlocked">
@@ -41,7 +42,7 @@
               <p>Get texting.</p>
             </li>
           </ol>
-          <button onclick="$('body').removeClass('firstLaunch').addClass('main')">Continue</button>
+          <!-- <button onclick="$('body').removeClass('firstLaunch').addClass('main')">Continue</button> -->
         
         </section>
       </div>
@@ -103,18 +104,18 @@
       </section>
     </section>
   </section>
-  <div class="loader"></div>
-  <script src="http://js.pusherapp.com/1.5/pusher.min.js"></script>
+  <div class="loader"></div>  
   
-  <script src="javascripts/jquery.js"></script>
-  <script src="javascripts/jquery-ui-1.8.14.custom.min.js"></script>
-  <script src="javascripts/jquery.timeago.js"></script>
-  <script src="javascripts/spin.js"></script>
-  <script src="javascripts/txtvia.js"></script>
-  <script src="javascripts/contact.js"></script>
-  <script src="javascripts/thread.js"></script>
+  <script src="javascripts/libs/jquery.js"></script>
+  <script src="javascripts/libs/jquery-ui-1.8.14.custom.min.js"></script>
+  <script src="javascripts/libs/jquery.timeago.js"></script>
+  <script src="javascripts/libs/spin.js"></script>
+  <!-- scripts concatenated and minified via ant build script-->
+  <script src="javascripts/mylibs/txtvia.js"></script>
+  <script src="javascripts/mylibs/storage.js"></script>
+  <!-- end scripts-->
   <script src="javascripts/popup.js"></script>
-  
+
   <script>
     var _gaq=[["_setAccount","UA-24988861-2"],["_trackPageview"]];
     (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.async=1;

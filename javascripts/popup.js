@@ -1,184 +1,201 @@
-PopUp = (function() {
+var PopUp = (function () {
     return {
-        init: function() {
+        init: function () {
             TxtVia.init();
-            TxtVia.Process.setupDevice();
-            localStorage.unReadMessages = 0;
-            TxtVia.Notification.messageCountClear();
+            PopUp.Check.firstLaunch(function(){
+                PopUp.Check.authToken(function(){
+                    PopUp.Check.client(function(){
+                        PopUp.Check.devices();
+                    });
+                });
+            });
+            
+            $(window).load(function(){
+                $("body").addClass("loaded");
+            });
+            
             PopUp.RegisterEvents.submitForm();
             PopUp.RegisterEvents.display();
             PopUp.RegisterEvents.validateForm();
+            
+            // PopUp.Process.view();
 
-            PopUp.Process.view();
-            $(function() {
-                if ($.parseJSON(localStorage.devices).length > 0) {
-                    $("body").removeClass("firstLaunch").addClass("main").addClass("loaded");
-                    $(".steps ol li:eq(0)").addClass("done");
-                } else {
-                    $("body").removeClass('main').addClass("firstLaunch");
-                    if (JSON.parse(localStorage.clientId) !== 0) {
-                        $("body").addClass("steps");
-                        $(".steps ol li:eq(0)").addClass("done");
-                    }
-                    setTimeout(function() {
-                        console.log("loaded");
-                        $("body").addClass("loaded");
-                    },
-                    500);
-                }
-            });
-            $("form#security").submit(function(e) {
+            $("form#security").submit(function (e) {
                 e.preventDefault();
             });
-            $("input[type=search]").focus(function() {
+            $("input[type=search]").focus(function () {
                 $(this).val("");
             });
-            $("input[type=password][name=pincode]").bind("keyup",
-            function(e) {
+            $("input[type=password][name=pincode]").bind("keyup", function (e) {
                 if (parseInt($(this).val(), 10) === 1234) {
                     $(this).val("");
                     PopUp.Actions.unlock();
                 }
             });
-            if (localStorage.authToken === "") {
-                $("body").removeClass('unlocked').addClass('locked');
-            } else {
-                $("body").addClass("steps");
-                $(".steps li:eq(0)").addClass('done');
-            }
 
-            // window.addEventListener("storage",PopUp.Event.storage,false);
         },
-        Event: {
-            storage: function(e) {
-                console.log("storage accessed:" + e.key);
-
-                /*
-              switch(e.key){
-                  case "devices":
-                    PopUp.UI.deviceList();
-                  break;
-                  case "messages":
-                    PopUp.Process.view();
-                  break;
-              }*/
-
+        Check: {
+            tries: 0,
+            firstLaunch:function(callback){
+                if ($.parseJSON(localStorage.firstLaunch) === true) {
+                    localStorage.firstLaunch = false;
+                    console.log('[PopUp.Init] First Launch');
+                    $("body").addClass("firstLaunch").removeClass("unlocked main steps");
+                    setTimeout(callback,2000);
+                } else {
+                    callback();
+                    console.log('[PopUp.Init] Normal Launch');
+                    $("body").removeClass('firstLaunch');
+                }
+            },
+            authToken: function(callback){
+                if (localStorage.authToken === "") {
+                    console.log('[PopUp.Init] No Auth Token');
+                    $("body").removeClass('main unlocked').addClass('locked').addClass("steps");
+                } else {
+                    console.log('[PopUp.Init] Auth Token');
+                    $("body").addClass("unlocked").removeClass("locked");
+                    callback();
+                }
+            },
+            client: function(callback){
+                if ($.parseJSON(localStorage.clientId) !== 0) {
+                    console.log('[PopUp.Init] Client not registered');
+                    $("body").removeClass('main');
+                    $(".steps ol li:eq(0)").removeClass("done");
+                }else{
+                    console.log('[PopUp.Init] Client registered');
+                    $(".steps ol li:eq(0)").addClass("done");
+                    callback();
+                }
+            },
+            devices: function(){
+                if(PopUp.Check.tries < 5){
+                    TxtVia.WebDB.getDevices(function(t,r){
+                        if(r.rows.length === 0){
+                            console.log('[PopUp.Init] No devices');
+                            chrome.extension.sendRequest({sync: true}, function(){
+                                PopUp.Check.devices();
+                            });
+                            $("body").removeClass('main').addClass("steps");
+                        }else{
+                            console.log('[PopUp.Init] ' + r.rows.length + ' devices registered');
+                            PopUp.Process.view();
+                            $("body").addClass("main").removeClass('steps');
+                            $(".steps ol li:eq(0)").addClass("done");
+                        }
+                    });
+                }else{
+                    console.log("[PopUp.Check.devices] exceeded max tries.");
+                }
             }
         },
         Process: {
-            view: function() {
+            view: function () {
                 console.log("Rendering View");
                 PopUp.UI.deviceList();
                 PopUp.Process.threads();
-                if (Thread.list()[0]) {
-                    PopUp.Process.thread(Thread.list()[0].recipient);
-                }
-
                 $("input[type=search]").autocomplete({
                     source: $.parseJSON(localStorage.contacts),
-                    select: function(e, ui) {
+                    select: function (e, ui) {
                         e.preventDefault();
                         $("body").removeClass("threads").addClass("thread");
                         $("input[type=search]").val(ui.item.label).blur();
                         $("form#new_message textarea").focus();
                         $("form input[name=recipient]").val(ui.item.value);
-                        // PopUp.UI.displayContact(ui.item);
                         PopUp.Process.thread(ui.item.value);
-                        // $(".thread header hgroup h3").html(ui.item.label);
-                        // $(".thread header hgroup img").attr('src', ui.item.avatar);
                     }
                 });
                 $("form").removeClass("loading");
                 PopUp.UI.displayEnv();
             },
-            threads: function() {
+            threads: function () {
                 console.log("Rendering Threads");
                 $("#threads ul li:not(.new_message)").remove();
-                $.each(Thread.list(),
-                function(index) {
+                TxtVia.WebDB.getConversations(function (message) {
                     var li = $("<li>", {
-                        'class': 'clearfix',
-                        'id': 'threadID' + index
+                        'class': 'clearfix'
                     }),
-                    avatar = Contact.lookup(this.recipient).avatar ? Contact.lookup(this.recipient).avatar: '/images/user_profile_image50.png',
+                        avatar = chrome.extension.getURL('/images/user_profile_image.png'),
+                    //Contact.lookup(message.recipient).avatar ? Contact.lookup(message.recipient).avatar: '/images/user_profile_image50.png',
                     img = $("<img>", {
                         src: avatar
                     }),
-                    h3 = $("<h3>", {
-                        html: Contact.lookup(this.recipient).label
+                        h3 = $("<h3>", {
+                        html: message.recipient
                     }),
-                    p = $("<p>", {
-                        text: this.messages[this.messages.length - 1].message.body
-                    }),
-                    recipient = this.recipient;
-                    li.append(img).append(h3).append(p);
-                    li.bind("click",
-                    function() {
-                        console.log("Opening Thread " + recipient);
-                        PopUp.Process.thread(recipient);
-                        PopUp.Actions.gotToThread();
+                        p = $("<p>", {
+                        text: message.body
                     });
-
+                    li.append(img).append(h3).append(p);
+                    li.bind("click", function () {
+                        console.log("Opening Thread " + message.recipient);
+                        PopUp.Process.thread(message, PopUp.Actions.gotToThread);
+                        // PopUp.Actions.gotToThread();
+                    });
                     $("#threads ul").append(li);
-
                 });
             },
-            thread: function(recipient) {
-                console.log("Rendering Thread " + recipient);
+            thread: function (conversation, callback) {
+
                 var header = $("<h3>", {
-                    text: Contact.lookup(recipient).label
+                    text: conversation.name + "(" + conversation.recipient + ")"
                 }),
-                avatar = Contact.lookup(this.recipient).avatar ? Contact.lookup(this.recipient).avatar: '/images/user_profile_image30.png',
-                img = $("<img>", {
+                    avatar = chrome.extension.getURL('/images/user_profile_image.png'),
+                    img = $("<img>", {
                     src: avatar
                 });
 
                 $(".thread header hgroup").empty().append(img).append(header);
-                $("form input[name=recipient]").val(recipient);
+                $("form input[name=recipient]").val(conversation.recipient);
                 $(".thread ol").empty();
-                $.each(Thread.messages(recipient),
-                function() {
 
-                    var li = $("<li>", {
-                        'class': this.message.sent_at ? "sent": "received",
-                        html: this.message.body + "&nbsp;"
-                    }),
-                    time = $("<time>", {
-                        datetime: $.timeago(this.message.sent_at ? this.message.sent_at: this.message.received_at),
-                        html: $.timeago(this.message.sent_at ? this.message.sent_at: this.message.received_at)
-                    });
-                    li.append(time);
-                    time.timeago();
-                    $(".thread ol").append(li);
-
+                TxtVia.WebDB.getMessages(conversation.recipient, function (t, r) {
+                    console.log(r);
+                    var i;
+                    for (i = 0; i < r.rows.length; i++) {
+                        var message = r.rows.item(i),
+                            li = $("<li>", {
+                            'class': message.sent_at ? "sent" : "received",
+                            html: message.body + "&nbsp;"
+                        }),
+                            time = $("<time>", {
+                            datetime: $.timeago(message.message_at),
+                            html: $.timeago(message.message_at)
+                        });
+                        li.append(time);
+                        time.timeago();
+                        $(".thread ol").append(li);
+                    }
                 });
+
                 $(".thread .scroll").animate({
                     scrollTop: $(".thread .scroll").height()
                 });
+                callback();
             }
-
         },
         RegisterEvents: {
-            display: function() {
+            display: function () {
                 var login = $("<a>", {
                     href: "#",
                     text: "Login",
-                    click: function() {
+                    click: function () {
                         PopUp.Actions.loginLink();
                     }
                 }),
-                logout = $("<a>", {
+                    logout = $("<a>", {
                     href: "#",
                     text: "Logout",
-                    click: function() {
+                    click: function () {
                         PopUp.Actions.logoutLink();
                     }
                 }),
-                hr = $("<hr>"),
-                sync = $("<a>", {
+                    hr = $("<hr>"),
+                    sync = $("<a>", {
                     href: "#",
                     text: "Sync",
-                    click: function() {
+                    click: function () {
                         PopUp.Actions.syncLink();
                     }
                 });
@@ -189,28 +206,24 @@ PopUp = (function() {
                     $("header nav").append(login);
                 }
 
-                $("a.showSettings").bind("click",
-                function() {
+                $("a.showSettings").bind("click", function () {
                     $(".settings:not(:visible)").fadeIn();
                 });
-                $(".settings a").click(function() {
+                $(".settings a").click(function () {
                     $(".settings:visible").fadeOut();
                 });
-                $(".settings").bind("mouseleave",
-                function() {
+                $(".settings").bind("mouseleave", function () {
                     if (window.settingTimeout) {
                         clearTimeout(window.settingTimeout);
                     }
-                    window.settingTimeout = setTimeout(function() {
+                    window.settingTimeout = setTimeout(function () {
                         $(".settings:visible").fadeOut();
-                    },
-                    3000);
+                    }, 3000);
                 });
 
             },
-            validateForm: function() {
-                $("textarea").bind("keyup",
-                function() {
+            validateForm: function () {
+                $("textarea").bind("keyup", function () {
                     if ($(this).val() === "") {
                         $("form#new_message").find("input[type=submit]").attr("disabled", "disabled");
                     } else {
@@ -219,32 +232,31 @@ PopUp = (function() {
                     }
                 });
             },
-            submitForm: function() {
-                $("form#new_message textarea").keydown(function(e) {
+            submitForm: function () {
+                $("form#new_message textarea").keydown(function (e) {
                     // alert(e.keyCode);
                     if ((e.ctrlKey || e.metaKey) && e.keyCode == 13) {
                         $("form#new_message").trigger('submit');
                     }
                 });
 
-                $("form#new_message").bind("submit",
-                function(e) {
+                $("form#new_message").bind("submit", function (e) {
                     var self = $(this);
                     if ($("form#new_message textarea").val().length > 0) {
                         $("form#new_message").addClass("loading");
 
                         // append message to pendingQueue
                         var pendingMessages = $.parseJSON(localStorage.pendingMessages),
-                        item = {
+                            item = {
                             "data": $(this).serialize()
                         },
-                        body_p = $("<p>", {
+                            body_p = $("<p>", {
                             text: $(this).find(":input[name='body']").val()
                         }),
-                        header = $("<header>", {
+                            header = $("<header>", {
                             text: $(this).find(":input[name='recipient']").val()
                         }),
-                        article = $("<article>").append(header).append(body_p);
+                            article = $("<article>").append(header).append(body_p);
 
                         $("#sent .messages").append(article);
 
@@ -253,23 +265,21 @@ PopUp = (function() {
                             'class': "sent sending",
                             html: self.find("textarea").val() + "&nbsp;"
                         }),
-                        time = $("<time>", {
+                            time = $("<time>", {
                             html: "sending&hellip;"
                         });
                         li.append(time);
                         $(".thread ol").append(li);
-
                         pendingMessages.push(item);
                         localStorage.pendingMessages = JSON.stringify(pendingMessages);
                         $(this).find("textarea").val("");
-                        TxtVia.Process.pendingMessages();
                     }
                     e.preventDefault();
                 });
             }
         },
         Actions: {
-            loginLink: function() {
+            loginLink: function () {
                 if (chrome.tabs) {
                     chrome.tabs.create({
                         url: TxtVia.url + '/sign_in?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
@@ -280,7 +290,7 @@ PopUp = (function() {
                 window.close();
                 // url:TxtVia.url + '/sign_in?app_identifier=' + TxtVia.appID + '&app_type=chrome'
             },
-            logoutLink: function() {
+            logoutLink: function () {
                 localStorage.authToken = "";
                 localStorage.clientId = 0;
                 chrome.tabs.create({
@@ -288,11 +298,11 @@ PopUp = (function() {
                 });
                 window.close();
             },
-            download: function(app) {
+            download: function (app) {
                 switch (app) {
                 case 'android':
                     chrome.tabs.create({
-                       url: TxtVia.url + '/downloads/android' 
+                        url: TxtVia.url + '/downloads/android'
                     });
                     break;
                 case 'iphone':
@@ -303,13 +313,15 @@ PopUp = (function() {
                     break;
                 }
             },
-            syncLink: function() {
-                TxtVia.Storage.download();
+            syncLink: function () {
+                chrome.extension.sendRequest({sync: true}, function(){
+                    console.log("comeplete");
+                });
             },
-            backToThreads: function() {
+            backToThreads: function () {
                 $("body").removeClass("thread").addClass("threads");
             },
-            gotToThread: function(empty) {
+            gotToThread: function (empty) {
                 if (empty) {
                     $(".thread ol").empty();
                     var input = $("<input>", {
@@ -317,8 +329,7 @@ PopUp = (function() {
                         required: true,
                         placeholder: "Mobile Phone Number"
                     });
-                    input.bind('keyup',
-                    function() {
+                    input.bind('keyup', function () {
                         $("form input[name=recipient]").val(this.value);
                     });
                     $("form input[name=recipient]").val("");
@@ -326,33 +337,33 @@ PopUp = (function() {
                 }
                 $("body").removeClass("threads").addClass("thread");
             },
-            lock: function() {
+            lock: function () {
                 $("body").removeClass("unlocked").addClass("locked");
             },
-            unlock: function() {
+            unlock: function () {
                 $("body").removeClass("locked").addClass("unlocked");
             }
         },
         UI: {
-            displayContact: function(contact) {
+            displayContact: function (contact) {
                 var img = $("<img>", {
-                    src: contact.avatar
+                    src: 'images/user_profile_image_30.png'
                 }),
-                header = $("<h3>", {
+                    header = $("<h3>", {
                     text: contact.label
                 });
 
                 $(".thread header hgroup").empty().append(img).append(header);
             },
-            alert: function() {
+            alert: function () {
                 alert("MESSAGE< MESSAGE< MESSAGE");
             },
-            displayEnv: function() {
+            displayEnv: function () {
                 if (TxtVia.env !== undefined) {
                     $(".threads footer").html("Running in " + TxtVia.env + " mode");
                 }
             },
-            flash: function(state, message) {
+            flash: function (state, message) {
                 function show() {
                     $(".flash").removeClass('red yellow green');
                     switch (state) {
@@ -366,32 +377,33 @@ PopUp = (function() {
                         $(".flash").addClass('green');
                         break;
                     }
-                    $(".flash").html(message)
-                    .slideDown()
-                    .click(function() {
+                    $(".flash").html(message).slideDown().click(function () {
                         $(this).slideUp();
                     });
 
                 }
                 if ($(".flash").is(':visible')) {
-                    $(".flash").slideUp(function() {
+                    $(".flash").slideUp(function () {
                         show();
                     });
                 } else {
                     show();
                 }
             },
-            deviceList: function() {
+            deviceList: function () {
                 console.log("Rendering Device List");
                 $("select[name=device]").empty();
-                $.each($.parseJSON(localStorage.devices),
-                function() {
-                    $("body").removeClass("firstLaunch steps").addClass("main");
-                    if (this.device.device_type != "client") {
-                        $("select[name=device]").append($("<option>", {
-                            text: this.device.name,
-                            value: this.device.id
-                        }));
+                TxtVia.WebDB.getDevices(function(t,r){
+                    var i, device;
+                    for(i=0;i<r.rows.length;i++){
+                        device = r.rows.item(i);
+                        $("body").removeClass("firstLaunch steps").addClass("main");
+                        if (device.device_type != "client") {
+                            $("select[name=device]").append($("<option>", {
+                                text: device.name,
+                                value: device.id
+                            }));
+                        }
                     }
                 });
             }
