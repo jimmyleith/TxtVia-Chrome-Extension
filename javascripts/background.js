@@ -21,9 +21,8 @@ Background.init = function () {
         console.error("[Background.init] onRequest listener failed");
 
     }
-    Background.connection();
     Background.Process.Post.messages();
-
+    Background.connection();
 };
 Background.isError = false;
 Background.Process = {
@@ -31,6 +30,7 @@ Background.Process = {
     completed: 0
 };
 Background.Process.Post = {};
+Background.Process.Post.messagesTries = 0;
 Background.Process.Post.messages = function () {
     var pendingMessages = $.parseJSON(localStorage.pendingMessages);
     if (pendingMessages.length > 0 && window.navigator.onLine && localStorage.authToken) {
@@ -40,22 +40,40 @@ Background.Process.Post.messages = function () {
             type: "POST",
             data: pendingMessages[0].data + "&sent_at=" + encodeURIComponent(new Date()) + "&client_id=" + localStorage.clientId + "&auth_token=" + localStorage.authToken,
             success: function (data) {
+                Background.Process.Post.messagesTries = 0;
                 console.log("[Background.Process.message] message sent");
                 Background.Process.isError = false;
-                TxtVia.Notification.messageSent(data.message);
-                TxtVia.WebDB.db.insertMessage(data.message, null);
+
+                Background.notify.message.sent(data);
+                TxtVia.WebDB.insertInto.messages(data, function(){
+                    chrome.extension.sendRequest({
+                        message: data
+                    },function(){
+                        console.log("[Background.Process.Post.messages] sent to display");
+                    });
+                });
                 // Update UI with success noteice, and new message in conversation.
+                
                 pendingMessages.shift();
                 localStorage.pendingMessages = JSON.stringify(pendingMessages);
                 localStorage.pendingMessages = JSON.stringify(pendingMessages);
                 // Double kill yeah!
             },
             error: function () {
+                Background.Process.Post.messagesTries = Background.Process.Post.messagesTries + 1;
                 if (Background.Process.isError === false) {
-                    Background.notify.messageFailed(pendingMessages[0]);
+                    Background.notify.message.failed(pendingMessages[0]);
+                    Background.Process.isError = true;
+                }
+                if(Background.Process.Post.messagesTries >= 5){
+                    Background.notify.message.skipped(pendingMessages[0]);
+                    pendingMessages.shift();
+                    localStorage.pendingMessages = JSON.stringify(pendingMessages);
+                    localStorage.pendingMessages = JSON.stringify(pendingMessages);
+                    Background.Process.isError = false;
                 }
             },
-            completed: function () {
+            complete: function () {
                 setTimeout(Background.Process.Post.messages, 100);
             }
         });
@@ -168,10 +186,13 @@ Background.Process.fullDownload = function (callback) {
 
 Background.notify = {};
 Background.notify.newMessage = function (message) {
-    console.log(message);
     var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "New message from " + message.name, message.body);
     notification.ondisplay = function () {
-        if (localStorage.autoHideNotifications) {
+        if($.parseJSON(localStorage.enableSounds)){
+            sound = new Audio(chrome.extension.getURL(localStorage.newMessageSound));
+            sound.play();
+        }
+        if ($.parseJSON(localStorage.autoHideNotifications)) {
             setTimeout(function () {
                 notification.cancel();
             }, 10000);
@@ -192,7 +213,11 @@ Background.notify.newMessage = function (message) {
 Background.notify.newDevice = function (device) {
     var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Congradulations", "You have successfully setup " + device.name + " with TxtVia.");
     notification.ondisplay = function () {
-        if (localStorage.autoHideNotifications) {
+        if($.parseJSON(localStorage.enableSounds)){
+            sound = new Audio(chrome.extension.getURL('done.mp3'));
+            sound.play();
+        }
+        if ($.parseJSON(localStorage.autoHideNotifications)) {
             setTimeout(function () {
                 notification.cancel();
             }, 10000);
@@ -210,8 +235,13 @@ Background.notify.newDevice = function (device) {
 Background.notify.client = {};
 Background.notify.client.success = function (device) {
     var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Congradulations", "You have successfully setup " + device.name + " with TxtVia.");
+
     notification.ondisplay = function () {
-        if (localStorage.autoHideNotifications) {
+        if($.parseJSON(localStorage.enableSounds)){
+            sound = new Audio(chrome.extension.getURL('done.mp3'));
+            sound.play();
+        }
+        if ($.parseJSON(localStorage.autoHideNotifications)) {
             setTimeout(function () {
                 notification.cancel();
             }, 10000);
@@ -225,7 +255,11 @@ Background.notify.client.success = function (device) {
 Background.notify.client.restored = function (device) {
     var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Welcome Back", "You have successfully restored TxtVia for " + device.name);
     notification.ondisplay = function () {
-        if (localStorage.autoHideNotifications) {
+        if($.parseJSON(localStorage.enableSounds)){
+            sound = new Audio(chrome.extension.getURL('done.mp3'));
+            sound.play();
+        }
+        if ($.parseJSON(localStorage.autoHideNotifications)) {
             setTimeout(function () {
                 notification.cancel();
             }, 10000);
@@ -265,10 +299,11 @@ Background.notify.client.failed = function (status) {
     console.log(notification);
     notification.show();
 };
-Background.notify.failedMessage = function (message) {
-    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Awe damn", "Failed to successfully send a message. \nDon't worry, the message will be delivered soon.");
+Background.notify.message = {};
+Background.notify.message.sent = function(message){
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Sent Message", "Your message is on it's way to " + message.recipient);
     notification.ondisplay = function () {
-        if (localStorage.autoHideNotifications) {
+        if ($.parseJSON(localStorage.autoHideNotifications)) {
             setTimeout(function () {
                 notification.cancel();
             }, 5000);
@@ -279,10 +314,38 @@ Background.notify.failedMessage = function (message) {
     };
     notification.show();
 };
+Background.notify.message.failed = function (message) {
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Awe damn", "Failed to successfully send a message. \nDon't worry, the message will be delivered soon.");
+    notification.ondisplay = function () {
+        if ($.parseJSON(localStorage.autoHideNotifications)) {
+            setTimeout(function () {
+                notification.cancel();
+            }, 5000);
+        }
+    };
+    notification.onclick = function () {
+        notification.cancel();
+    };
+    notification.show();
+};
+Background.notify.message.skipped = function (message) {
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Awe damn", "A messsage has failed to be processed. \n\rThis message is being skipped.");
+    // notification.ondisplay = function () {
+    //     if (localStorage.autoHideNotifications) {
+    //         setTimeout(function () {
+    //             notification.cancel();
+    //         }, 5000);
+    //     }
+    // };
+    notification.onclick = function () {
+        notification.cancel();
+    };
+    notification.show();
+};
 Background.notify.syncComplete = function (message) {
     var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Woohooo", "Your messages and contacts are now synced.");
     notification.ondisplay = function () {
-        if (localStorage.autoHideNotifications) {
+        if ($.parseJSON(localStorage.autoHideNotifications)) {
             setTimeout(function () {
                 notification.cancel();
             }, 5000);
@@ -294,10 +357,11 @@ Background.notify.syncComplete = function (message) {
     notification.show();
 };
 Background.connection = function () {
-    if (!TxtVia.server) {
+    if (!TxtVia.server && window.navigator.onLine) {
         Pusher.channel_auth_endpoint = TxtVia.url + "/users/auth/client/?auth_token=" + localStorage.authToken;
         switch (TxtVia.PushMethod) {
         case "Pusher":
+            console.log("[Background.connection] Using Pusher");
             TxtVia.server = new Pusher(TxtVia.Pusher.webSocketID.toString());
             TxtVia.channel = TxtVia.server.subscribe('txtvia_' + localStorage.authToken);
             TxtVia.channel.bind('subscription_error', function (status) {
@@ -308,7 +372,6 @@ Background.connection = function () {
             });
             TxtVia.channel.bind('message', function (data) {
                 try {
-                    console.log(data);
                     TxtVia.WebDB.insertInto.messages(data);
                     Background.notify.newMessage(data);
                 } catch (err) {
@@ -328,11 +391,14 @@ Background.connection = function () {
             });
             break;
         case "BeaconPush":
+            console.log("[Background.connection] Using BeaconPush");
             Beacon.connect(TxtVia.BeaconPush.webSocketID, ['txtvia'], {
                 log: TxtVia.env === "development" ? true : false,
                 user: localStorage.authToken
             });
+            // Beacon.connect(TxtVia.BeaconPush.webSocketID, ['txtvia']);
             Beacon.listen(function (data) {
+                console.log(data);
                 var message, device;
                 try {
                     if (data.message) {
@@ -362,6 +428,7 @@ Background.connection = function () {
         }
         return TxtVia.server;
     } else {
+        setTimeout(Background.connection,1000);
         return TxtVia.server;
     }
 };

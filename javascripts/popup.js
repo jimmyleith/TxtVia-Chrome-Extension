@@ -36,6 +36,21 @@ var PopUp = (function () {
                     PopUp.Actions.unlock();
                 }
             });
+            
+            try {
+                chrome.extension.onRequest.addListener(function (request, sender, callback) {
+                    if (request.message) {
+                        if(PopUp.currentThread === TxtVia.TextUtil.mobileNumber(request.message.recipient)){
+                            PopUp.Process.threadConversation(request.message.recipient);
+                        }
+                    } else {
+                        console.log(request);
+                    }
+                });
+            } catch (e) {
+                console.error("[Background.init] onRequest listener failed");
+
+            }
 
         },
         Check: {
@@ -101,7 +116,7 @@ var PopUp = (function () {
                 console.log("Rendering View");
                 PopUp.UI.deviceList();
                 PopUp.Process.threads();
-                
+                PopUp.Process.contacts();
                 $("form").removeClass("loading");
                 PopUp.UI.displayEnv();
             },
@@ -110,12 +125,17 @@ var PopUp = (function () {
                     $("input[type=search]").autocomplete({
                         source: data,
                         select: function (e, ui) {
+                            var conversation = {
+                                recipient:ui.item.value, 
+                                name:ui.item.label
+                            };
                             e.preventDefault();
                             $("body").removeClass("threads").addClass("thread");
                             $("input[type=search]").val(ui.item.label).blur();
                             $("form#new_message textarea").focus();
                             $("form input[name=recipient]").val(ui.item.value);
-                            PopUp.Process.thread(ui.item.value);
+                            
+                            PopUp.Process.thread(conversation,ui.item.value);
                         }
                     });
                 });
@@ -148,7 +168,7 @@ var PopUp = (function () {
                 });
             },
             thread: function (conversation, callback) {
-
+                PopUp.currentThread = conversation.recipient;
                 var header = $("<h3>", {
                     text: conversation.name
                 }),
@@ -159,10 +179,17 @@ var PopUp = (function () {
 
                 $(".thread header hgroup").empty().append(img).append(header);
                 $("form input[name=recipient]").val(conversation.recipient);
-                $(".thread ol").empty();
+                
+                PopUp.Process.threadConversation(conversation.recipient);
 
-                TxtVia.WebDB.getMessages(conversation.recipient, function (t, r) {
-                    console.log(r);
+                $(".thread .scroll").animate({
+                    scrollTop: $(".thread .scroll").height()
+                });
+                callback();
+            },
+            threadConversation: function(recipient){
+                $(".thread ol").empty();
+                TxtVia.WebDB.getMessages(recipient, function (t, r) {
                     var i;
                     for (i = 0; i < r.rows.length; i++) {
                         var message = r.rows.item(i),
@@ -171,19 +198,14 @@ var PopUp = (function () {
                             html: message.body + "&nbsp;"
                         }),
                             time = $("<time>", {
-                            datetime: $.timeago(message.message_at),
-                            html: $.timeago(message.message_at)
+                            datetime: $.timeago(message.messaged_at),
+                            html: $.timeago(message.messaged_at)
                         });
                         li.append(time);
                         time.timeago();
                         $(".thread ol").append(li);
                     }
                 });
-
-                $(".thread .scroll").animate({
-                    scrollTop: $(".thread .scroll").height()
-                });
-                callback();
             }
         },
         RegisterEvents: {
@@ -254,8 +276,9 @@ var PopUp = (function () {
                 $("form#new_message").bind("submit", function (e) {
                     var self = $(this);
                     if ($("form#new_message textarea").val().length > 0) {
+                        
                         $("form#new_message").addClass("loading");
-
+                        $(":input[name=device_id]").val($(":input[name=device]").val());
                         // append message to pendingQueue
                         var pendingMessages = $.parseJSON(localStorage.pendingMessages),
                             item = {
@@ -328,7 +351,7 @@ var PopUp = (function () {
                 chrome.extension.sendRequest({
                     sync: true
                 }, function () {
-                    console.log("comeplete");
+                    console.log("[Background.Process.fullDownload] comeplete");
                 });
             },
             backToThreads: function () {
