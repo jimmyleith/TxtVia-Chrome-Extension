@@ -25,7 +25,7 @@ TxtVia.WebDB.createTables = function () {
         //                 'sent_at DATETIME)', [], function(){
         //                     console.log('[TxtVia.WebDB.createTables] pending_messages created');
         //                 }, TxtVia.WebDB.onError);
-        tx.executeSql('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY ASC, message_id INTEGER UNIQUE NOT NULL, device_id INTEGER NOT NULL, client_id INTEGER, recipient TEXT NOT NULL, body TEXT NOT NULL, read INTEGER, messaged_at DATEIME NOT NULL, sent_at DATETIME, received_at DATETIME, created_at DATETIME)', [], function (tx, r) {
+        tx.executeSql('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY ASC, message_id INTEGER UNIQUE NOT NULL, device_id INTEGER NOT NULL, client_id INTEGER, recipient TEXT NOT NULL, body TEXT NOT NULL, read INTEGER DEFAULT 0, messaged_at DATEIME NOT NULL, sent_at DATETIME, received_at DATETIME, created_at DATETIME)', [], function (tx, r) {
             console.log('[TxtVia.WebDB.createTables] messages created');
         }, TxtVia.WebDB.onError);
         tx.executeSql('CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY ASC, ' + 'name TEXT, ' + 'device_type TEXT, ' + 'unique_id TEXT UNIQUE NOT NULL, ' + 'carrier TEXT)', [], function (tx, r) {
@@ -78,6 +78,11 @@ TxtVia.WebDB.insertInto.contacts = function (contact, callback) {
         tx.executeSql('INSERT INTO contacts(name, number) VALUES (?,?)', [contact.name, TxtVia.TextUtil.mobileNumber(contact.number)], callback, TxtVia.WebDB.onError);
     });
 };
+TxtVia.WebDB.messageRead = function (id) {
+    TxtVia.WebDB.db.transaction(function (tx) {
+        tx.executeSql('UPDATE messages SET read = 1 WHERE id = ?', [id], null, TxtVia.WebDB.onError);
+    });
+};
 TxtVia.WebDB.lastReceivedMessage = function (callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
         tx.executeSql("SELECT * FROM messages m LEFT JOIN contacts c On c.number = m.recipient ORDER BY id DESC LIMIT 1", [], callback, TxtVia.WebDB.onError);
@@ -102,11 +107,12 @@ TxtVia.WebDB.getConversations = function (callback) {
 TxtVia.WebDB.getContacts = function (callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
         tx.executeSql('SELECT * FROM contacts ORDER BY name DESC', [], function (tx, rs) {
-            var i, array = [],hash;
+            var i, array = [],
+                hash;
             for (i = 0; i < rs.rows.length; i++) {
                 hash = {
-                    label:rs.rows.item(i).name,
-                    value:rs.rows.item(i).number
+                    label: rs.rows.item(i).name,
+                    value: rs.rows.item(i).number
                 };
                 array.push(hash);
             }
@@ -119,9 +125,19 @@ TxtVia.WebDB.getMessages = function (recipient, callback) {
         tx.executeSql('SELECT * FROM `messages` m LEFT JOIN contacts c ON c.number = m.recipient WHERE m.`recipient` = ? ORDER BY `messaged_at` ASC', [recipient], callback, TxtVia.WebDB.onError);
     });
 };
+TxtVia.WebDB.getContact = function (number, callback) {
+    TxtVia.WebDB.db.transaction(function (tx) {
+        tx.executeSql('SELECT * FROM `contacts` WHERE number = ? LIMIT 1', [number], callback, TxtVia.WebDB.onError);
+    });
+};
 TxtVia.WebDB.getDevices = function (callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
         tx.executeSql('SELECT * FROM devices ORDER BY `name` ASC', [], callback, TxtVia.WebDB.onError);
+    });
+};
+TxtVia.WebDB.unReadMessageCount = function (callback) {
+    TxtVia.WebDB.db.transaction(function (tx) {
+        tx.executeSql("SELECT COUNT(*) c FROM messages WHERE read = 0", [], callback, TxtVia.WebDB.onError);
     });
 };
 TxtVia.Storage = function () {
@@ -146,10 +162,10 @@ TxtVia.Storage = function () {
     if (!localStorage.autoHideNotifications) {
         localStorage.autoHideNotifications = true;
     }
-    if (!localStorage.enableSounds){
+    if (!localStorage.enableSounds) {
         localStorage.enableSounds = true;
     }
-    if (!localStorage.newMessageSound){
+    if (!localStorage.newMessageSound) {
         localStorage.newMessageSound = 'newMessage.mp3';
     }
     if (!localStorage.locale) {

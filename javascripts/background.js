@@ -1,4 +1,4 @@
-/*globals $, TxtVia, chrome, webkitNotifications, Pusher, Beacon, localStorage,console,window,setTimeout,setInterval,clearTimeout */
+/*globals $, TxtVia, chrome, webkitNotifications, Pusher, Beacon, localStorage,console,window,setTimeout,setInterval,clearTimeout,Audio */
 /**
  * @depend storage.js
  **/
@@ -11,16 +11,19 @@ Background.init = function () {
     }
     try {
         chrome.extension.onRequest.addListener(function (request, sender, callback) {
+            console.log("[Background.init.onRequest] Request received");
             if (request.sync) {
                 Background.Process.fullDownload(callback);
-            } else {
+            } else if(request.updateBadge){
+                Background.notify.icon();
+            }else {
                 console.log(request);
             }
         });
     } catch (e) {
         console.error("[Background.init] onRequest listener failed");
-
     }
+    Background.notify.icon();
     Background.Process.Post.messages();
     Background.connection();
 };
@@ -45,15 +48,14 @@ Background.Process.Post.messages = function () {
                 Background.Process.isError = false;
 
                 Background.notify.message.sent(data);
-                TxtVia.WebDB.insertInto.messages(data, function(){
+                TxtVia.WebDB.insertInto.messages(data, function () {
                     chrome.extension.sendRequest({
                         message: data
-                    },function(){
+                    }, function () {
                         console.log("[Background.Process.Post.messages] sent to display");
                     });
                 });
                 // Update UI with success noteice, and new message in conversation.
-                
                 pendingMessages.shift();
                 localStorage.pendingMessages = JSON.stringify(pendingMessages);
                 localStorage.pendingMessages = JSON.stringify(pendingMessages);
@@ -65,7 +67,7 @@ Background.Process.Post.messages = function () {
                     Background.notify.message.failed(pendingMessages[0]);
                     Background.Process.isError = true;
                 }
-                if(Background.Process.Post.messagesTries >= 5){
+                if (Background.Process.Post.messagesTries >= 5) {
                     Background.notify.message.skipped(pendingMessages[0]);
                     pendingMessages.shift();
                     localStorage.pendingMessages = JSON.stringify(pendingMessages);
@@ -170,7 +172,8 @@ Background.Process.fullDownload = function (callback) {
     Background.Process.completed = 0;
     Background.Process.Get.contacts();
     Background.Process.Get.messages();
-    function reDo(){
+
+    function reDo() {
         if (Background.Process.completed >= 2) {
             Background.notify.syncComplete();
             if (callback) {
@@ -185,10 +188,20 @@ Background.Process.fullDownload = function (callback) {
 };
 
 Background.notify = {};
+Background.notify.icon = function () {
+    TxtVia.WebDB.unReadMessageCount(function (t, r) {        
+        var count = r.rows.item(0).c;
+        chrome.browserAction.setBadgeText({
+            text: count > 0 ? count.toString() : ""
+        });
+    });
+    
+};
 Background.notify.newMessage = function (message) {
     var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "New message from " + message.name, message.body);
     notification.ondisplay = function () {
-        if($.parseJSON(localStorage.enableSounds)){
+        var sound;
+        if ($.parseJSON(localStorage.enableSounds)) {
             sound = new Audio(chrome.extension.getURL(localStorage.newMessageSound));
             sound.play();
         }
@@ -205,15 +218,19 @@ Background.notify.newMessage = function (message) {
         notification.cancel();
     };
     notification.show();
-    localStorage.unReadMessages = parseInt(localStorage.unReadMessages, 10) + 1;
-    chrome.browserAction.setBadgeText({
-        text: localStorage.unReadMessages === "0" ? localStorage.unReadMessages : ""
+
+    chrome.extension.sendRequest({
+        message: message
+    }, function () {
+        console.log("[Background.notify.newMessage] message sent to PopUp");
     });
+    Background.notify.icon();
 };
 Background.notify.newDevice = function (device) {
     var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Congradulations", "You have successfully setup " + device.name + " with TxtVia.");
     notification.ondisplay = function () {
-        if($.parseJSON(localStorage.enableSounds)){
+        var sound;
+        if ($.parseJSON(localStorage.enableSounds)) {
             sound = new Audio(chrome.extension.getURL('done.mp3'));
             sound.play();
         }
@@ -237,7 +254,8 @@ Background.notify.client.success = function (device) {
     var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Congradulations", "You have successfully setup " + device.name + " with TxtVia.");
 
     notification.ondisplay = function () {
-        if($.parseJSON(localStorage.enableSounds)){
+        var sound;
+        if ($.parseJSON(localStorage.enableSounds)) {
             sound = new Audio(chrome.extension.getURL('done.mp3'));
             sound.play();
         }
@@ -255,7 +273,8 @@ Background.notify.client.success = function (device) {
 Background.notify.client.restored = function (device) {
     var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Welcome Back", "You have successfully restored TxtVia for " + device.name);
     notification.ondisplay = function () {
-        if($.parseJSON(localStorage.enableSounds)){
+        var sound;
+        if ($.parseJSON(localStorage.enableSounds)) {
             sound = new Audio(chrome.extension.getURL('done.mp3'));
             sound.play();
         }
@@ -300,7 +319,7 @@ Background.notify.client.failed = function (status) {
     notification.show();
 };
 Background.notify.message = {};
-Background.notify.message.sent = function(message){
+Background.notify.message.sent = function (message) {
     var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Sent Message", "Your message is on it's way to " + message.recipient);
     notification.ondisplay = function () {
         if ($.parseJSON(localStorage.autoHideNotifications)) {
@@ -370,10 +389,16 @@ Background.connection = function () {
                     Background.notify.client.failed(status);
                 }
             });
+            TxtVia.server.connection.bind('connected', function () {
+                console.log("[WebSocket] Connected");
+            });
             TxtVia.channel.bind('message', function (data) {
                 try {
                     TxtVia.WebDB.insertInto.messages(data);
-                    Background.notify.newMessage(data);
+                    TxtVia.WebDB.getMessages(data.recipient, function (t, r) {
+                        data.name = r.rows.item(0).name;
+                        Background.notify.newMessage(data);
+                    });
                 } catch (err) {
                     console.error("[WebSocket] Failed to parse message data.");
                     console.error(err);
@@ -403,12 +428,10 @@ Background.connection = function () {
                 try {
                     if (data.message) {
                         message = $.parseJSON(data.message);
-                        TxtVia.WebDB.insertInto.messages(message, function (tx, r) {
-                            console.log('inserted');
-                            TxtVia.WebDB.lastReceivedMessage(function (tx, r) {
-                                console.log('display message');
-                                Background.notify.newMessage(r.rows.item(0));
-                            });
+                        TxtVia.WebDB.insertInto.messages(message);
+                        TxtVia.WebDB.getMessages(message.recipient, function (t, r) {
+                            message.name = r.rows.item(0).name;
+                            Background.notify.newMessage(message);
                         });
                     } else if (data.device) {
                         device = $.parseJSON(data.device);
@@ -428,7 +451,7 @@ Background.connection = function () {
         }
         return TxtVia.server;
     } else {
-        setTimeout(Background.connection,1000);
+        setTimeout(Background.connection, 1000);
         return TxtVia.server;
     }
 };

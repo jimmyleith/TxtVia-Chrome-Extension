@@ -36,13 +36,14 @@ var PopUp = (function () {
                     PopUp.Actions.unlock();
                 }
             });
-            
+
             try {
                 chrome.extension.onRequest.addListener(function (request, sender, callback) {
                     if (request.message) {
-                        if(PopUp.currentThread === TxtVia.TextUtil.mobileNumber(request.message.recipient)){
+                        if (PopUp.currentThread === TxtVia.TextUtil.mobileNumber(request.message.recipient)) {
                             PopUp.Process.threadConversation(request.message.recipient);
                         }
+                        PopUp.Process.threads();
                     } else {
                         console.log(request);
                     }
@@ -120,22 +121,22 @@ var PopUp = (function () {
                 $("form").removeClass("loading");
                 PopUp.UI.displayEnv();
             },
-            contacts:function(){
+            contacts: function () {
                 TxtVia.WebDB.getContacts(function (data) {
                     $("input[type=search]").autocomplete({
                         source: data,
                         select: function (e, ui) {
                             var conversation = {
-                                recipient:ui.item.value, 
-                                name:ui.item.label
+                                recipient: ui.item.value,
+                                name: ui.item.label
                             };
                             e.preventDefault();
                             $("body").removeClass("threads").addClass("thread");
                             $("input[type=search]").val(ui.item.label).blur();
                             $("form#new_message textarea").focus();
                             $("form input[name=recipient]").val(ui.item.value);
-                            
-                            PopUp.Process.thread(conversation,ui.item.value);
+
+                            PopUp.Process.thread(conversation, ui.item.value);
                         }
                     });
                 });
@@ -153,7 +154,7 @@ var PopUp = (function () {
                         src: avatar
                     }),
                         h3 = $("<h3>", {
-                        html: message.recipient
+                        html: message.name ? message.name : message.recipient
                     }),
                         p = $("<p>", {
                         text: message.body
@@ -170,7 +171,7 @@ var PopUp = (function () {
             thread: function (conversation, callback) {
                 PopUp.currentThread = conversation.recipient;
                 var header = $("<h3>", {
-                    text: conversation.name
+                    text: conversation.name ? conversation.name : conversation.recipient
                 }),
                     avatar = chrome.extension.getURL('/images/user_profile_image.png'),
                     img = $("<img>", {
@@ -179,19 +180,20 @@ var PopUp = (function () {
 
                 $(".thread header hgroup").empty().append(img).append(header);
                 $("form input[name=recipient]").val(conversation.recipient);
-                
+
                 PopUp.Process.threadConversation(conversation.recipient);
 
-                $(".thread .scroll").animate({
-                    scrollTop: $(".thread .scroll").height()
-                });
-                callback();
+                
+                if(callback){
+                    callback();
+                }
             },
-            threadConversation: function(recipient){
+            threadConversation: function (recipient) {
                 $(".thread ol").empty();
                 TxtVia.WebDB.getMessages(recipient, function (t, r) {
                     var i;
                     for (i = 0; i < r.rows.length; i++) {
+
                         var message = r.rows.item(i),
                             li = $("<li>", {
                             'class': message.sent_at ? "sent" : "received",
@@ -201,10 +203,19 @@ var PopUp = (function () {
                             datetime: $.timeago(message.messaged_at),
                             html: $.timeago(message.messaged_at)
                         });
+                        TxtVia.WebDB.messageRead(message.id);
                         li.append(time);
                         time.timeago();
                         $(".thread ol").append(li);
                     }
+                    $(".thread .scroll").animate({
+                        scrollTop: $(".thread .scroll .messages").height()
+                    });
+                    chrome.extension.sendRequest({
+                        updateBadge: true
+                    }, function () {
+                        console.log("[Background.Process.threadConversation] comeplete");
+                    });
                 });
             }
         },
@@ -276,7 +287,7 @@ var PopUp = (function () {
                 $("form#new_message").bind("submit", function (e) {
                     var self = $(this);
                     if ($("form#new_message textarea").val().length > 0) {
-                        
+
                         $("form#new_message").addClass("loading");
                         $(":input[name=device_id]").val($(":input[name=device]").val());
                         // append message to pendingQueue
@@ -304,6 +315,9 @@ var PopUp = (function () {
                         });
                         li.append(time);
                         $(".thread ol").append(li);
+                        $(".thread .scroll").animate({
+                            scrollTop: $(".thread .scroll").height()
+                        });
                         pendingMessages.push(item);
                         localStorage.pendingMessages = JSON.stringify(pendingMessages);
                         $(this).find("textarea").val("");
@@ -372,6 +386,9 @@ var PopUp = (function () {
                     $(".thread header hgroup").empty().html(input);
                 }
                 $("body").removeClass("threads").addClass("thread");
+                $(".thread .scroll").animate({
+                    scrollTop: $(".thread .scroll").height()
+                });
             },
             lock: function () {
                 $("body").removeClass("unlocked").addClass("locked");

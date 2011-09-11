@@ -458,7 +458,7 @@ overflow-y: auto;
 border-top: 1px solid #262c34;
 }
 section.thread ol {
-display: block;
+display: block; 
 }
 section.thread time {
 float: right;
