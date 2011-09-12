@@ -242,8 +242,15 @@ var PopUp = (function () {
                     click: function () {
                         PopUp.Actions.syncLink();
                     }
+                }),
+                donate = $("<a>",{
+                    href:'http://txtvia.com/donate_now',
+                    text:"Donate",
+                    click:function(){
+                        PopUp.Actions.donateLink();
+                    }
                 });
-                $("header nav").empty().append(sync).append(hr);
+                $("header nav").empty().append(sync).append(donate).append(hr);
                 if (localStorage.authToken !== "") {
                     $("header nav").append(logout);
                 } else {
@@ -366,6 +373,11 @@ var PopUp = (function () {
                     sync: true
                 }, function () {
                     console.log("[Background.Process.fullDownload] comeplete");
+                });
+            },
+            donateLink:function(){
+                chrome.tabs.create({
+                    url:'http://txtvia.com/donate_now'
                 });
             },
             backToThreads: function () {
