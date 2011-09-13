@@ -112,7 +112,8 @@ TxtVia.WebDB.getContacts = function (callback) {
             for (i = 0; i < rs.rows.length; i++) {
                 hash = {
                     label: rs.rows.item(i).name,
-                    value: rs.rows.item(i).number
+                    value: rs.rows.item(i).number,
+                    photo_url: rs.rows.item(i).photo_url
                 };
                 array.push(hash);
             }

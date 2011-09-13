@@ -127,14 +127,14 @@ var PopUp = (function () {
                         select: function (e, ui) {
                             var conversation = {
                                 recipient: ui.item.value,
-                                name: ui.item.label
+                                name: ui.item.label,
+                                photo_url: ui.item.photo_url
                             };
                             e.preventDefault();
                             $("body").removeClass("threads").addClass("thread");
                             $("input[type=search]").val(ui.item.label).blur();
                             $("form#new_message textarea").focus();
                             $("form input[name=recipient]").val(ui.item.value);
-
                             PopUp.Process.thread(conversation, ui.item.value);
                         }
                     });
@@ -144,7 +144,6 @@ var PopUp = (function () {
                 console.log("Rendering Threads");
                 $("#threads ul li:not(.new_message)").remove();
                 TxtVia.WebDB.getConversations(function (message) {
-                    console.log(message);
                     var li = $("<li>", {
                         'class': 'clearfix'
                     }),
@@ -186,12 +185,16 @@ var PopUp = (function () {
                     'class': 'avatar',
                     src: avatar
                 }).hide().data('photo_url', conversation.photo_url);
+                try{
                 img.bind('load', function () {
                     $(this).fadeIn();
                 }).error(function () {
                     PopUp.Actions.updateGoogleToken();
                     $(this).attr('src', chrome.extension.getURL('/images/user_profile_image30.png'));
                 });
+            }catch(err){
+                console.log("[PopUp.Process.thread] can't load image");
+            }
                 $(".thread header hgroup").empty().append(img).append(header);
                 $("form input[name=recipient]").val(conversation.recipient);
 
