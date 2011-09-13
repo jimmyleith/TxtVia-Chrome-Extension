@@ -143,9 +143,28 @@ text-shadow: none;
 text-decoration: none;
 display: block;
 text-align: left;
-padding: 5px 10px;
-color: #525252;
+color: #525252; 
+    position:relative; 
+    padding:5px 10px 5px 30px; 
+    left:0; 
+    bottom:0; 
+    right:0; 
+    top:0; 
+    margin:0;
 }
+header nav a:before{
+	content:"";
+    background-repeat:no-repeat;
+background-position:5px center; 
+    position:absolute; 
+    left:0; 
+    top:50%; 
+    width:20px; 
+    height:20px; 
+    display:block; 
+    margin-top:-10px;
+}
+
 header nav a:hover,
 .ui-autocomplete li a:hover{
 color: white;
@@ -156,6 +175,20 @@ background: -moz-linear-gradient(top, rgba(123,176,215,1) 0%,rgba(90,156,205,1) 
 background: -o-linear-gradient(top, rgba(123,176,215,1) 0%,rgba(90,156,205,1) 3%,rgba(84,143,198,1) 41%,rgba(65,110,179,1) 100%);
 background: -ms-linear-gradient(top, rgba(123,176,215,1) 0%,rgba(90,156,205,1) 3%,rgba(84,143,198,1) 41%,rgba(65,110,179,1) 100%);
 background: linear-gradient(top, rgba(123,176,215,1) 0%,rgba(90,156,205,1) 3%,rgba(84,143,198,1) 41%,rgba(65,110,179,1) 100%);
+background-repeat:no-repeat;
+background-position:5px center;
+}
+header nav a.sync:before{
+  background-image:url('../images/synced_small.png');
+}
+header nav a.donate:before{
+  background-image:url('../images/donate_small.png');
+}
+header nav a.login:before{
+  background-image:url('../images/locked_small.png');
+}
+header nav a.logout:before{
+  background-image:url('../images/unlocked_small.png');
 }
 
 /* ----------------------------------
@@ -392,6 +425,7 @@ list-style-type: none;
 section.threads li {
 padding: 15px;
 cursor: pointer;
+cursor:hand;
 }
 section.threads li:nth-child(even) {
 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.1)), color-stop(1%,rgba(0,0,0,0.2)), color-stop(48%,rgba(0,0,0,0.05)), color-stop(100%,rgba(0,0,0,0.2)));
@@ -405,6 +439,9 @@ section.threads img {
 float: left;
 margin-right: 25px; 
     width:50px;
+    border-radius: 4px;
+border: 1px solid rgba(255, 255, 255, .3);
+padding: 1px;
 }
 
 /* @end */

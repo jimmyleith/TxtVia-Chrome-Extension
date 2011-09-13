@@ -119,7 +119,6 @@ var PopUp = (function () {
                 PopUp.Process.threads();
                 PopUp.Process.contacts();
                 $("form").removeClass("loading");
-                PopUp.UI.displayEnv();
             },
             contacts: function () {
                 TxtVia.WebDB.getContacts(function (data) {
@@ -145,19 +144,27 @@ var PopUp = (function () {
                 console.log("Rendering Threads");
                 $("#threads ul li:not(.new_message)").remove();
                 TxtVia.WebDB.getConversations(function (message) {
+                    console.log(message);
                     var li = $("<li>", {
                         'class': 'clearfix'
                     }),
-                        avatar = chrome.extension.getURL('/images/user_profile_image.png'),
+                        avatar = message.photo_url ? message.photo_url + "?access_token=" + localStorage.googleToken : chrome.extension.getURL('/images/user_profile_image50.png'),
                     //Contact.lookup(message.recipient).avatar ? Contact.lookup(message.recipient).avatar: '/images/user_profile_image50.png',
                     img = $("<img>", {
+                        'class': 'avatar',
                         src: avatar
-                    }),
+                    }).hide().data('photo_url', message.photo_url),
                         h3 = $("<h3>", {
                         html: message.name ? message.name : message.recipient
                     }),
                         p = $("<p>", {
                         text: message.body
+                    });
+                    img.error(function () {
+                        PopUp.Actions.updateGoogleToken();
+                        $(this).attr('src', chrome.extension.getURL('/images/user_profile_image50.png'));
+                    }).bind('load', function () {
+                        $(this).fadeIn();
                     });
                     li.append(img).append(h3).append(p);
                     li.bind("click", function () {
@@ -169,22 +176,29 @@ var PopUp = (function () {
                 });
             },
             thread: function (conversation, callback) {
+                console.log(conversation);
                 PopUp.currentThread = conversation.recipient;
                 var header = $("<h3>", {
                     text: conversation.name ? conversation.name : conversation.recipient
                 }),
-                    avatar = chrome.extension.getURL('/images/user_profile_image.png'),
+                    avatar = conversation.photo_url ? conversation.photo_url + "?access_token=" + localStorage.googleToken : chrome.extension.getURL('/images/user_profile_image30.png'),
                     img = $("<img>", {
+                    'class': 'avatar',
                     src: avatar
+                }).hide().data('photo_url', conversation.photo_url);
+                img.bind('load', function () {
+                    $(this).fadeIn();
+                }).error(function () {
+                    PopUp.Actions.updateGoogleToken();
+                    $(this).attr('src', chrome.extension.getURL('/images/user_profile_image30.png'));
                 });
-
                 $(".thread header hgroup").empty().append(img).append(header);
                 $("form input[name=recipient]").val(conversation.recipient);
 
                 PopUp.Process.threadConversation(conversation.recipient);
 
-                
-                if(callback){
+
+                if (callback) {
                     callback();
                 }
             },
@@ -223,6 +237,7 @@ var PopUp = (function () {
             display: function () {
                 var login = $("<a>", {
                     href: "#",
+                    'class':'login',
                     text: "Login",
                     click: function () {
                         PopUp.Actions.loginLink();
@@ -230,6 +245,7 @@ var PopUp = (function () {
                 }),
                     logout = $("<a>", {
                     href: "#",
+                    'class':'logout',
                     text: "Logout",
                     click: function () {
                         PopUp.Actions.logoutLink();
@@ -238,15 +254,17 @@ var PopUp = (function () {
                     hr = $("<hr>"),
                     sync = $("<a>", {
                     href: "#",
+                    'class':'sync',
                     text: "Sync",
                     click: function () {
                         PopUp.Actions.syncLink();
                     }
                 }),
-                donate = $("<a>",{
-                    href:'http://txtvia.com/donate_now',
-                    text:"Donate",
-                    click:function(){
+                    donate = $("<a>", {
+                    href: 'http://txtvia.com/donate_now',
+                    'class':'donate',
+                    text: "Donate",
+                    click: function () {
                         PopUp.Actions.donateLink();
                     }
                 });
@@ -273,6 +291,7 @@ var PopUp = (function () {
                 });
 
             },
+
             validateForm: function () {
                 $("textarea").bind("keyup", function () {
                     if ($(this).val() === "") {
@@ -375,9 +394,27 @@ var PopUp = (function () {
                     console.log("[Background.Process.fullDownload] comeplete");
                 });
             },
-            donateLink:function(){
+            updateGoogleToken: function () {
+                chrome.extension.sendRequest({
+                    googleToken: true
+                }, function (token) {
+                    $("img.avatar").each(function () {
+                        var url = $(this).data('photo_url');
+                        console.log(url);
+                        if(url){
+                            $(this).fadeOut(function () {
+                                $(this).attr('src', url + "?access_token=" + token);
+                                $(this).bind('load',function(){
+                                   $(this).fadeIn(); 
+                                });
+                            });
+                        }
+                    });
+                });
+            },
+            donateLink: function () {
                 chrome.tabs.create({
-                    url:'http://txtvia.com/donate_now'
+                    url: 'http://txtvia.com/donate_now'
                 });
             },
             backToThreads: function () {
@@ -422,11 +459,6 @@ var PopUp = (function () {
             },
             alert: function () {
                 alert("MESSAGE< MESSAGE< MESSAGE");
-            },
-            displayEnv: function () {
-                if (TxtVia.env !== undefined) {
-                    $(".threads footer").html("Running in " + TxtVia.env + " mode");
-                }
             },
             flash: function (state, message) {
                 function show() {

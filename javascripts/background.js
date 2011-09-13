@@ -16,7 +16,9 @@ Background.init = function () {
                 Background.Process.fullDownload(callback);
             } else if(request.updateBadge){
                 Background.notify.icon();
-            }else {
+            }else if(request.googleToken){
+                Background.Process.Get.googleToken(callback);
+            }else{
                 console.log(request);
             }
         });
@@ -30,7 +32,8 @@ Background.init = function () {
 Background.isError = false;
 Background.Process = {
     isError: false,
-    completed: 0
+    completed: 0,
+    lock:false
 };
 Background.Process.Post = {};
 Background.Process.Post.messagesTries = 0;
@@ -104,17 +107,26 @@ Background.Process.Post.client = function () {
 };
 
 Background.Process.Get = {};
-Background.Process.Get.googleToken = function () {
-    $.ajax({
-        url: TxtVia.url + "/contacts/token.json?auth_token=" + localStorage.authToken,
-        type: "GET",
-        success: function (data) {
-            localStorage.googleToken = data.get_token;
-        },
-        error: function (e) {
-            console.error("[Background.Process.Get.googleToken] failed : " + e.responseText);
-        }
-    });
+Background.Process.Get.googleToken = function (callback) {
+    if(Background.Process.lock === false){
+        $.ajax({
+            url: TxtVia.url + "/contacts/token.json?auth_token=" + localStorage.authToken,
+            type: "GET",
+            beforeSend:function(){
+              Background.Process.lock = true;  
+            },
+            success: function (data) {
+                localStorage.googleToken = data.get_token;
+                callback(data.get_token);
+            },
+            error: function (e) {
+                console.error("[Background.Process.Get.googleToken] failed : " + e.responseText);
+            },
+            complete:function(){
+                Background.Process.lock = false;
+            }
+        });
+    }
 };
 Background.Process.Get.contacts = function () {
     $.ajax({
@@ -199,7 +211,7 @@ Background.notify.icon = function () {
     
 };
 Background.notify.newMessage = function (message) {
-    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "New message from " + message.name, message.body);
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/newMessage.png'), "New message from " + message.name, message.body);
     notification.ondisplay = function () {
         var sound;
         if ($.parseJSON(localStorage.enableSounds)) {
@@ -228,7 +240,7 @@ Background.notify.newMessage = function (message) {
     Background.notify.icon();
 };
 Background.notify.newDevice = function (device) {
-    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Congradulations", "You have successfully setup " + device.name + " with TxtVia.");
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/deviceAdded.png'), "Congradulations", "You have successfully setup " + device.name + " with TxtVia.");
     notification.ondisplay = function () {
         var sound;
         if ($.parseJSON(localStorage.enableSounds)) {
@@ -252,7 +264,7 @@ Background.notify.newDevice = function (device) {
 
 Background.notify.client = {};
 Background.notify.client.success = function (device) {
-    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Congradulations", "You have successfully setup " + device.name + " with TxtVia.");
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/complete.png'), "Congradulations", "You have successfully setup " + device.name + " with TxtVia.");
 
     notification.ondisplay = function () {
         var sound;
@@ -272,7 +284,7 @@ Background.notify.client.success = function (device) {
     notification.show();
 };
 Background.notify.client.restored = function (device) {
-    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Welcome Back", "You have successfully restored TxtVia for " + device.name);
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/synced.png'), "Welcome Back", "You have successfully restored TxtVia for " + device.name);
     notification.ondisplay = function () {
         var sound;
         if ($.parseJSON(localStorage.enableSounds)) {
@@ -311,7 +323,7 @@ Background.notify.client.failed = function (status) {
         message = "Failed to successfully setup device with TxtVia.\n\r Click here to try again.";
         break;
     }
-    notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Awe damn", message);
+    notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/failed.png'), "Awe damn", message);
     notification.onclick = function () {
         action();
         notification.cancel();
@@ -321,7 +333,7 @@ Background.notify.client.failed = function (status) {
 };
 Background.notify.message = {};
 Background.notify.message.sent = function (message) {
-    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Sent Message", "Your message is on it's way to " + message.recipient);
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/messageSent.png'), "Sent Message", "Your message is on it's way to " + message.recipient);
     notification.ondisplay = function () {
         if ($.parseJSON(localStorage.autoHideNotifications)) {
             setTimeout(function () {
@@ -335,7 +347,7 @@ Background.notify.message.sent = function (message) {
     notification.show();
 };
 Background.notify.message.failed = function (message) {
-    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Awe damn", "Failed to successfully send a message. \nDon't worry, the message will be delivered soon.");
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/messageFailed.png'), "Awe damn", "Failed to successfully send a message. \nDon't worry, the message will be delivered soon.");
     notification.ondisplay = function () {
         if ($.parseJSON(localStorage.autoHideNotifications)) {
             setTimeout(function () {
@@ -349,7 +361,7 @@ Background.notify.message.failed = function (message) {
     notification.show();
 };
 Background.notify.message.skipped = function (message) {
-    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Awe damn", "A messsage has failed to be processed. \n\rThis message is being skipped.");
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/messageFailed.png'), "Awe damn", "A messsage has failed to be processed. \n\rThis message is being skipped.");
     // notification.ondisplay = function () {
     //     if (localStorage.autoHideNotifications) {
     //         setTimeout(function () {
@@ -363,7 +375,7 @@ Background.notify.message.skipped = function (message) {
     notification.show();
 };
 Background.notify.syncComplete = function (message) {
-    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/icon48.png'), "Woohooo", "Your messages and contacts are now synced.");
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/messageSyncComplete.png'), "Woohooo", "Your messages and contacts are now synced.");
     notification.ondisplay = function () {
         if ($.parseJSON(localStorage.autoHideNotifications)) {
             setTimeout(function () {
@@ -419,7 +431,7 @@ Background.connection = function () {
         case "BeaconPush":
             console.log("[Background.connection] Using BeaconPush");
             Beacon.connect(TxtVia.BeaconPush.webSocketID, ['txtvia'], {
-                log: TxtVia.env === "development" ? true : false,
+                log: localStorage.env === "development" ? true : false,
                 user: localStorage.authToken
             });
             // Beacon.connect(TxtVia.BeaconPush.webSocketID, ['txtvia']);

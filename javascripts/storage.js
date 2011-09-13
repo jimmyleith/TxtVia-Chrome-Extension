@@ -141,6 +141,9 @@ TxtVia.WebDB.unReadMessageCount = function (callback) {
     });
 };
 TxtVia.Storage = function () {
+    if (!localStorage.env){
+        localStorage.env = "production";
+    }
     if (!localStorage.unReadMessages) {
         localStorage.unReadMessages = 0;
     }
