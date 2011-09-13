@@ -370,6 +370,9 @@ var PopUp = (function () {
             logoutLink: function () {
                 localStorage.authToken = "";
                 localStorage.clientId = 0;
+                localStorage.googleToken = "";
+                localStorage.unReadMessages = 0;
+                TxtVia.WebDB.purgeDB(true);
                 chrome.tabs.create({
                     url: TxtVia.url + '/sign_out'
                 });

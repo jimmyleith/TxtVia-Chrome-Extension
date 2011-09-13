@@ -38,6 +38,9 @@ TxtVia.WebDB.createTables = function () {
 };
 TxtVia.WebDB.purge = function (createTables) {
     localStorage.clear();
+    TxtVia.WebDB.purgeDB(createTables);
+};
+TxtVia.WebDB.purgeDB = function(createTables){
     TxtVia.WebDB.db.transaction(function (tx) {
         tx.executeSql('DROP TABLE devices', [], function () {
             console.log("[TxtVia.WebDB.purge] success");
