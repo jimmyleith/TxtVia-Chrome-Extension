@@ -524,8 +524,10 @@ border-left-width: 0;
 border-left-style: none;
 padding: 10px;
 margin: 15px;
-color: #cacaca;
+color: #cacaca; 
+    vertical-align:middle;
 }
+
 section.thread form input[type=submit] {
 background: rgb(123,176,215);
 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(123,176,215,1)), color-stop(3%,rgba(90,156,205,1)), color-stop(41%,rgba(84,143,198,1)), color-stop(100%,rgba(65,110,179,1)));
@@ -549,11 +551,15 @@ section.thread .loading input[type=submit] {
 font-size: 1em;
 }
 section.thread input[type=tel]{
-	margin:0 auto;
-	padding:3px 10px; 
-	line-height:30px; 
+	margin:0 auto; 
 	font-size:16px; 
-	width:100%;
+	width:100%; 
+    vertical-align:middle; 
+    line-height:1em; 
+    padding:10px;
+}
+section.thread input[type=tel]::-webkit-input-placeholder,
+section.thread input[type=tel]:-moz-placeholder{ 
 }
 section.thread form input[type=submit]:hover {
 background: rgb(123,176,215);

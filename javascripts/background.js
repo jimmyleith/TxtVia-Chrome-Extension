@@ -125,7 +125,8 @@ Background.Process.Get.contacts = function () {
                 $.each(data, function () {
                     var contact = {
                         name: this.label,
-                        number: this.value
+                        number: this.value,
+                        photo_url: this.avatar
                     };
                     TxtVia.WebDB.insertInto.contacts(contact, null);
                 });
