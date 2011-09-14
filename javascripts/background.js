@@ -6,6 +6,7 @@
 var Background = {};
 Background.init = function () {
     TxtVia.init();
+    Background.Update();
     if ($.parseJSON(localStorage.clientID) === 0) {
         Background.Process.Post.client();
     }
@@ -14,11 +15,11 @@ Background.init = function () {
             console.log("[Background.init.onRequest] Request received");
             if (request.sync) {
                 Background.Process.fullDownload(callback);
-            } else if(request.updateBadge){
+            } else if (request.updateBadge) {
                 Background.notify.icon();
-            }else if(request.googleToken){
+            } else if (request.googleToken) {
                 Background.Process.Get.googleToken(callback);
-            }else{
+            } else {
                 console.log(request);
             }
         });
@@ -30,10 +31,26 @@ Background.init = function () {
     Background.connection();
 };
 Background.isError = false;
+Background.Update = function () {
+    var version = parseInt(localStorage.version.replace(/\./g, ''),10);
+    if (version < 110) {
+        Background.Migrate.v110();
+        localStorage.version = '1.1.0';
+        Background.Update();
+        return;
+    }
+    localStorage.version = chrome.app.getDetails().version;
+};
+Background.Migrate = {};
+Background.Migrate.v110 = function () {
+    localStorage.messages.clear();
+    localStorage.devices.clear();
+    localStorage.contacts.clear();
+};
 Background.Process = {
     isError: false,
     completed: 0,
-    lock:false
+    lock: false
 };
 Background.Process.Post = {};
 Background.Process.Post.messagesTries = 0;
@@ -108,12 +125,12 @@ Background.Process.Post.client = function () {
 
 Background.Process.Get = {};
 Background.Process.Get.googleToken = function (callback) {
-    if(Background.Process.lock === false){
+    if (Background.Process.lock === false) {
         $.ajax({
             url: TxtVia.url + "/contacts/token.json?auth_token=" + localStorage.authToken,
             type: "GET",
-            beforeSend:function(){
-              Background.Process.lock = true;  
+            beforeSend: function () {
+                Background.Process.lock = true;
             },
             success: function (data) {
                 localStorage.googleToken = data.get_token;
@@ -122,7 +139,7 @@ Background.Process.Get.googleToken = function (callback) {
             error: function (e) {
                 console.error("[Background.Process.Get.googleToken] failed : " + e.responseText);
             },
-            complete:function(){
+            complete: function () {
                 Background.Process.lock = false;
             }
         });
@@ -188,7 +205,11 @@ Background.Process.fullDownload = function (callback) {
 
     function reDo() {
         if (Background.Process.completed >= 2) {
-            Background.notify.syncComplete();
+            TxtVia.WebDB.getDevices(function (t, r) {
+                if(r.rows.length > 0){
+                    Background.notify.syncComplete();
+                }
+            });
             if (callback) {
                 callback();
             }
@@ -202,13 +223,13 @@ Background.Process.fullDownload = function (callback) {
 
 Background.notify = {};
 Background.notify.icon = function () {
-    TxtVia.WebDB.unReadMessageCount(function (t, r) {        
+    TxtVia.WebDB.unReadMessageCount(function (t, r) {
         var count = r.rows.item(0).c;
         chrome.browserAction.setBadgeText({
             text: count > 0 ? count.toString() : ""
         });
     });
-    
+
 };
 Background.notify.newMessage = function (message) {
     var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/newMessage.png'), "New message from " + message.name, message.body);
@@ -407,11 +428,13 @@ Background.connection = function () {
             });
             TxtVia.channel.bind('message', function (data) {
                 try {
-                    TxtVia.WebDB.insertInto.messages(data);
-                    TxtVia.WebDB.getMessages(data.recipient, function (t, r) {
-                        data.name = r.rows.item(0).name;
-                        Background.notify.newMessage(data);
-                    });
+                    if (data) {
+                        TxtVia.WebDB.insertInto.messages(data);
+                        TxtVia.WebDB.getMessages(data.recipient, function (t, r) {
+                            data.name = r.rows.item(0).name;
+                            Background.notify.newMessage(data);
+                        });
+                    }
                 } catch (err) {
                     console.error("[WebSocket] Failed to parse message data.");
                     console.error(err);
@@ -419,9 +442,11 @@ Background.connection = function () {
             });
             TxtVia.channel.bind('device', function (data) {
                 try {
-                    console.log(data);
-                    TxtVia.WebDB.insertInto.devices(data);
-                    Background.notify.newDevice(data);
+                    if (data) {
+                        console.log(data);
+                        TxtVia.WebDB.insertInto.devices(data);
+                        Background.notify.newDevice(data);
+                    }
                 } catch (err) {
                     console.error("[WebSocket] Failed to parse device data.");
                     console.error(err);

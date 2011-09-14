@@ -148,6 +148,9 @@ TxtVia.Storage = function () {
     if (!localStorage.env){
         localStorage.env = "production";
     }
+    if(!localStorage.version){
+        localStorage.version = '1.0.3';
+    }
     if (!localStorage.unReadMessages) {
         localStorage.unReadMessages = 0;
     }

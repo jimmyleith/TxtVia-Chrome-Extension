@@ -20,6 +20,7 @@ v1.1.0
 * Locally stored Google Contacts.
 * Added message alert sounds.
 * Improved unread message count.
+* Logout now removes contacts, message and device detail.
 
 v1.0.3
 -----
