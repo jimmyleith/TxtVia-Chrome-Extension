@@ -8,6 +8,11 @@ View [Downloads](http://txtvia.com/download) for multiple devices and browsers.
 
 Updates
 ====
+v1.1.1
+* Fixed Major issues causing connection and display issues for all users.
+* Updated Notices Icons.
+* Added more fail recovery preceptors
+
 v1.1.0.3
 * Fixed client not showing messages for the second run.
 
