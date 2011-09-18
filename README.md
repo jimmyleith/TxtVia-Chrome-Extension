@@ -8,6 +8,8 @@ View [Downloads](http://txtvia.com/download) for multiple devices and browsers.
 
 Updates
 ====
+v1.1.1.1
+* Fixed a Typo that would cause a failure to display the popup.
 v1.1.1
 * Fixed Major issues causing connection and display issues for all users.
 * Updated Notices Icons.

@@ -109,7 +109,7 @@ var PopUp = (function () {
                 if (PopUp.Check.tries < 5) {
                     TxtVia.WebDB.getDevices(function (t, r) {
                         if (r.rows.length === 0) {
-                            Popup.Check.tried = Popup.Check.tried + 1;
+                            PopUp.Check.tried = PopUp.Check.tried + 1;
                             console.log('[PopUp.Init] No devices');
                             chrome.extension.sendRequest({
                                 sync: true
