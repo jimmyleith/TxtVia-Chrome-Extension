@@ -74,6 +74,6 @@ TxtVia.TextUtil.mobileNumber = function (number) {
         var code = JSON.parse(localStorage.locale).country_calling;
         return number.replace(/\s/, '').replace(/^0/, code);
     }catch(err){
-        console.log("[TxtVia.TextUtil.mobileNumber] can't convert number : " + number)
+        console.log("[TxtVia.TextUtil.mobileNumber] can't convert number : " + number);
     }
 };

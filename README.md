@@ -8,8 +8,14 @@ View [Downloads](http://txtvia.com/download) for multiple devices and browsers.
 
 Updates
 ====
+v1.1.0.3
+* Fixed client not showing messages for the second run.
 
-v1.1.0
+v1.1.0.2
+----
+* Fixed registering new client.
+
+v1.1.0.1
 ----
 * Fixed message page reloading to different conversation.
 * Fixed Google Contacts display Unknown Number.

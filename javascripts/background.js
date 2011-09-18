@@ -7,7 +7,7 @@ var Background = {};
 Background.init = function () {
     TxtVia.init();
     Background.Update();
-    if ($.parseJSON(localStorage.clientID) === 0) {
+    if ($.parseJSON(localStorage.clientId) === 0) {
         Background.Process.Post.client();
     }
     try {
@@ -15,6 +15,8 @@ Background.init = function () {
             console.log("[Background.init.onRequest] Request received");
             if (request.sync) {
                 Background.Process.fullDownload(callback);
+            } else if (request.client) {
+                Background.Process.Post.client();
             } else if (request.updateBadge) {
                 Background.notify.icon();
             } else if (request.googleToken) {
@@ -32,7 +34,7 @@ Background.init = function () {
 };
 Background.isError = false;
 Background.Update = function () {
-    var version = parseInt(localStorage.version.replace(/\./g, ''),10);
+    var version = parseInt(localStorage.version.replace(/\./g, ''), 10);
     if (version < 110) {
         Background.Migrate.v110();
         localStorage.version = '1.1.0';
@@ -43,9 +45,9 @@ Background.Update = function () {
 };
 Background.Migrate = {};
 Background.Migrate.v110 = function () {
-    localStorage.messages.clear();
-    localStorage.devices.clear();
-    localStorage.contacts.clear();
+    localStorage.removeItem("messages");
+    localStorage.removeItem("devices");
+    localStorage.removeItem("contacts");
 };
 Background.Process = {
     isError: false,
@@ -81,18 +83,26 @@ Background.Process.Post.messages = function () {
                 localStorage.pendingMessages = JSON.stringify(pendingMessages);
                 // Double kill yeah!
             },
-            error: function () {
-                Background.Process.Post.messagesTries = Background.Process.Post.messagesTries + 1;
-                if (Background.Process.isError === false) {
-                    Background.notify.message.failed(pendingMessages[0]);
+            error: function (e) {
+                console.error(e);
+                if (Background.Process.isError === false && (e.status === 422 && $.parseJSON(e.responseText).client)) {
+                    Background.Process.Post.client(function () {
+                        Background.Process.isError = false;
+                    });
                     Background.Process.isError = true;
-                }
-                if (Background.Process.Post.messagesTries >= 5) {
-                    Background.notify.message.skipped(pendingMessages[0]);
-                    pendingMessages.shift();
-                    localStorage.pendingMessages = JSON.stringify(pendingMessages);
-                    localStorage.pendingMessages = JSON.stringify(pendingMessages);
-                    Background.Process.isError = false;
+                } else {
+                    Background.Process.Post.messagesTries = Background.Process.Post.messagesTries + 1;
+                    if (Background.Process.isError === false) {
+                        Background.notify.message.failed(pendingMessages[0]);
+                        Background.Process.isError = true;
+                    }
+                    if (Background.Process.Post.messagesTries >= 5) {
+                        Background.notify.message.skipped(pendingMessages[0]);
+                        pendingMessages.shift();
+                        localStorage.pendingMessages = JSON.stringify(pendingMessages);
+                        localStorage.pendingMessages = JSON.stringify(pendingMessages);
+                        Background.Process.isError = false;
+                    }
                 }
             },
             complete: function () {
@@ -103,24 +113,36 @@ Background.Process.Post.messages = function () {
         setTimeout(Background.Process.Post.messages, 100);
     }
 };
-Background.Process.Post.client = function () {
-    $.ajax({
-        url: TxtVia.url + "/devices.json",
-        type: "POST",
-        data: "unique_id=" + TxtVia.UNIQUE_ID + "&type=client&name=" + encodeURIComponent(TxtVia.appName) + "&auth_token=" + localStorage.authToken,
-        success: function (data) {
-            localStorage.clientId = data.id;
-            Background.notify.client.success(data);
-        },
-        error: function (e, s, t) {
-            if (e.status === 422) {
-                Background.Process.Get.device();
-            } else {
-                console.error("[Background.Process.Post.client] failed : " + e.responseText);
-                Background.notify.client.failed();
+Background.Process.Post.client = function (callback) {
+
+    if (Background.Process.lock === false) {
+        $.ajax({
+            url: TxtVia.url + "/devices.json",
+            type: "POST",
+            data: "unique_id=" + TxtVia.UNIQUE_ID + "&type=client&name=" + encodeURIComponent(TxtVia.appName) + "&auth_token=" + localStorage.authToken,
+            beforeSent: function () {
+                Background.Process.lock = true;
+            },
+            success: function (data) {
+                localStorage.clientId = data.id;
+                Background.notify.client.success(data);
+            },
+            error: function (e, s, t) {
+                if (e.status === 422) {
+                    Background.Process.Get.device();
+                } else {
+                    console.error("[Background.Process.Post.client] failed : " + e.responseText);
+                    Background.notify.client.failed();
+                }
+            },
+            complete: function () {
+                Background.Process.lock = false;
+                if (callback) {
+                    callback();
+                }
             }
-        }
-    });
+        });
+    }
 };
 
 Background.Process.Get = {};
@@ -182,6 +204,9 @@ Background.Process.Get.messages = function () {
         },
         error: function (e) {
             console.error("[Background.Process.Get.messages] failed : " + e.responseText);
+            if(e.status === 401){
+                localStorage.authToken = "";
+            }
         }
     });
 };
@@ -202,26 +227,26 @@ Background.Process.fullDownload = function (callback) {
     Background.Process.completed = 0;
     Background.Process.Get.contacts();
     Background.Process.Get.messages();
-
-    function reDo() {
-        if (Background.Process.completed >= 2) {
-            TxtVia.WebDB.getDevices(function (t, r) {
-                if(r.rows.length > 0){
-                    Background.notify.syncComplete();
-                }
-            });
-            if (callback) {
-                callback();
+    Background.Process.onDevices();
+};
+Background.Process.onDevices = function(){
+    if (Background.Process.completed >= 2) {
+        TxtVia.WebDB.getDevices(function (t, r) {
+            if (r.rows.length > 0) {
+                Background.notify.syncComplete();
             }
-            Background.Process.completed = 0;
-        } else {
-            setTimeout(reDo, 500);
-        }
+        });
+        try{
+            callback();
+        }catch(e){}
+        Background.Process.completed = 0;
+    } else {
+        setTimeout(Background.Process.onDevices, 500);
     }
-    reDo();
 };
 
 Background.notify = {};
+
 Background.notify.icon = function () {
     TxtVia.WebDB.unReadMessageCount(function (t, r) {
         var count = r.rows.item(0).c;
@@ -259,28 +284,6 @@ Background.notify.newMessage = function (message) {
         console.log("[Background.notify.newMessage] message sent to PopUp");
     });
     Background.notify.icon();
-};
-Background.notify.newDevice = function (device) {
-    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/deviceAdded.png'), "Congradulations", "You have successfully setup " + device.name + " with TxtVia.");
-    notification.ondisplay = function () {
-        var sound;
-        if ($.parseJSON(localStorage.enableSounds)) {
-            sound = new Audio(chrome.extension.getURL('done.mp3'));
-            sound.play();
-        }
-        if ($.parseJSON(localStorage.autoHideNotifications)) {
-            setTimeout(function () {
-                notification.cancel();
-            }, 10000);
-        }
-    };
-    notification.onclick = function () {
-        chrome.tabs.create({
-            url: chrome.extension.getURL('popup.html')
-        });
-        notification.cancel();
-    };
-    notification.show();
 };
 
 Background.notify.client = {};
@@ -445,7 +448,7 @@ Background.connection = function () {
                     if (data) {
                         console.log(data);
                         TxtVia.WebDB.insertInto.devices(data);
-                        Background.notify.newDevice(data);
+                        Background.notify.client.success(data);
                     }
                 } catch (err) {
                     console.error("[WebSocket] Failed to parse device data.");
@@ -466,14 +469,17 @@ Background.connection = function () {
                 try {
                     if (data.message) {
                         message = $.parseJSON(data.message);
-                        TxtVia.WebDB.insertInto.messages(message);
+                        console.log(message);
+                        TxtVia.WebDB.insertInto.messages(message, function () {
+                            console.log("insterted message");
+                        });
                         TxtVia.WebDB.getMessages(message.recipient, function (t, r) {
                             message.name = r.rows.item(0).name;
-                            Background.notify.newMessage(message);
                         });
+                        Background.notify.newMessage(message);
                     } else if (data.device) {
                         device = $.parseJSON(data.device);
-                        Background.notify.newDevice(device);
+                        Background.notify.client.success(device);
                         TxtVia.WebDB.insertInto.devices(device);
                     }
                 } catch (err) {

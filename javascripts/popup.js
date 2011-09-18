@@ -15,10 +15,6 @@ var PopUp = (function () {
                 });
             });
 
-            $(window).load(function () {
-                $("body").addClass("loaded");
-            });
-
             PopUp.RegisterEvents.submitForm();
             PopUp.RegisterEvents.display();
             PopUp.RegisterEvents.validateForm();
@@ -54,6 +50,10 @@ var PopUp = (function () {
             }
 
         },
+        onReady:function(){
+            console.log("[PopUp] Loaded...");
+            $("body").addClass("loaded");
+        },
         Check: {
             tries: 0,
             firstLaunch: function (callback) {
@@ -61,38 +61,55 @@ var PopUp = (function () {
                     localStorage.firstLaunch = false;
                     console.log('[PopUp.Init] First Launch');
                     $("body").addClass("firstLaunch").removeClass("unlocked main steps");
-                    setTimeout(callback, 2000);
+                    try{
+                        setTimeout(callback, 2000);
+                    }catch(er1){}
+                    PopUp.onReady();
                 } else {
-                    callback();
                     console.log('[PopUp.Init] Normal Launch');
                     $("body").removeClass('firstLaunch');
+                    try{
+                        callback();
+                    }catch(er2){}
                 }
             },
             authToken: function (callback) {
                 if (localStorage.authToken === "") {
                     console.log('[PopUp.Init] No Auth Token');
                     $("body").removeClass('main unlocked').addClass('locked').addClass("steps");
+                    PopUp.onReady();
                 } else {
                     console.log('[PopUp.Init] Auth Token');
                     $("body").addClass("unlocked").removeClass("locked");
-                    callback();
+                    try{
+                        callback();
+                    }catch(err){}
                 }
             },
             client: function (callback) {
-                if ($.parseJSON(localStorage.clientId) !== 0) {
+                if ($.parseJSON(localStorage.clientId) === 0) {
                     console.log('[PopUp.Init] Client not registered');
+                    chrome.extension.sendRequest({
+                        client: true
+                    }, function () {
+                        PopUp.Check.client();
+                    });
                     $("body").removeClass('main');
                     $(".steps ol li:eq(0)").removeClass("done");
+                    PopUp.onReady();
                 } else {
                     console.log('[PopUp.Init] Client registered');
                     $(".steps ol li:eq(0)").addClass("done");
-                    callback();
+                    try{
+                        callback();
+                    }catch(err){}
                 }
             },
             devices: function () {
                 if (PopUp.Check.tries < 5) {
                     TxtVia.WebDB.getDevices(function (t, r) {
                         if (r.rows.length === 0) {
+                            Popup.Check.tried = Popup.Check.tried + 1;
                             console.log('[PopUp.Init] No devices');
                             chrome.extension.sendRequest({
                                 sync: true
@@ -100,12 +117,14 @@ var PopUp = (function () {
                                 PopUp.Check.devices();
                             });
                             $("body").removeClass('main').addClass("steps");
+                            
                         } else {
                             console.log('[PopUp.Init] ' + r.rows.length + ' devices registered');
                             PopUp.Process.view();
                             $("body").addClass("main").removeClass('steps');
                             $(".steps ol li:eq(0)").addClass("done");
                         }
+                        PopUp.onReady();
                     });
                 } else {
                     console.log("[PopUp.Check.devices] exceeded max tries.");
@@ -160,8 +179,9 @@ var PopUp = (function () {
                         text: message.body
                     });
                     img.error(function () {
+                        var el = $(this);
                         PopUp.Actions.updateGoogleToken();
-                        $(this).attr('src', chrome.extension.getURL('/images/user_profile_image50.png'));
+                        el.attr('src', chrome.extension.getURL('/images/user_profile_image50.png'));
                     }).bind('load', function () {
                         $(this).fadeIn();
                     });
@@ -397,6 +417,7 @@ var PopUp = (function () {
                 chrome.extension.sendRequest({
                     sync: true
                 }, function () {
+                    PopUp.Process.view();
                     console.log("[Background.Process.fullDownload] comeplete");
                 });
             },
@@ -406,7 +427,6 @@ var PopUp = (function () {
                 }, function (token) {
                     $("img.avatar").each(function () {
                         var url = $(this).data('photo_url');
-                        console.log(url);
                         if(url){
                             $(this).fadeOut(function () {
                                 $(this).attr('src', url + "?access_token=" + token);

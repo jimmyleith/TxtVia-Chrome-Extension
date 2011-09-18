@@ -1,1 +1,1 @@
-rvm use 1.9.2@txtvia --create
+rvm use ruby-1.9.2-head@txtvia-chrome --create

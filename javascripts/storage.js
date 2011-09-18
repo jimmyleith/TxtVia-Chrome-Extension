@@ -68,7 +68,12 @@ TxtVia.WebDB.purgeDB = function(createTables){
 TxtVia.WebDB.insertInto = {};
 TxtVia.WebDB.insertInto.messages = function (message, callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
-        tx.executeSql('INSERT INTO messages(recipient, body, message_id, device_id, client_id, messaged_at, sent_at, received_at, created_at) VALUES (?,?,?,?,?,?,?,?,?)', [TxtVia.TextUtil.mobileNumber(message.recipient), message.body, message.id, message.device_id, message.client_id, message.messaged_at, message.sent_at, message.received_at, message.created_at], callback, TxtVia.WebDB.onError);
+        console.log("[TxtVia.WebDB.insertInto.messages] accepted: ");
+        console.log(message);
+        tx.executeSql('INSERT INTO messages (recipient, body, message_id, device_id, client_id, messaged_at, sent_at, received_at, created_at) VALUES (?,?,?,?,?,?,?,?,?)', 
+        [TxtVia.TextUtil.mobileNumber(message.recipient), message.body, message.id, message.device_id, message.client_id, message.messaged_at, message.sent_at, message.received_at, message.created_at], 
+        callback, 
+        TxtVia.WebDB.onError);
     });
 };
 TxtVia.WebDB.insertInto.devices = function (device, callback) {
