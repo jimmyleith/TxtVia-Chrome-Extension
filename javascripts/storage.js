@@ -40,7 +40,7 @@ TxtVia.WebDB.purge = function (createTables) {
     localStorage.clear();
     TxtVia.WebDB.purgeDB(createTables);
 };
-TxtVia.WebDB.purgeDB = function(createTables){
+TxtVia.WebDB.purgeDB = function (createTables) {
     TxtVia.WebDB.db.transaction(function (tx) {
         tx.executeSql('DROP TABLE devices', [], function () {
             console.log("[TxtVia.WebDB.purge] success");
@@ -70,10 +70,7 @@ TxtVia.WebDB.insertInto.messages = function (message, callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
         console.log("[TxtVia.WebDB.insertInto.messages] accepted: ");
         console.log(message);
-        tx.executeSql('INSERT INTO messages (recipient, body, message_id, device_id, client_id, messaged_at, sent_at, received_at, created_at) VALUES (?,?,?,?,?,?,?,?,?)', 
-        [TxtVia.TextUtil.mobileNumber(message.recipient), message.body, message.id, message.device_id, message.client_id, message.messaged_at, message.sent_at, message.received_at, message.created_at], 
-        callback, 
-        TxtVia.WebDB.onError);
+        tx.executeSql('INSERT INTO messages (recipient, body, message_id, device_id, client_id, messaged_at, sent_at, received_at, created_at) VALUES (?,?,?,?,?,?,?,?,?)', [TxtVia.TextUtil.mobileNumber(message.recipient), message.body, message.id, message.device_id, message.client_id, message.messaged_at, message.sent_at, message.received_at, message.created_at], callback, TxtVia.WebDB.onError);
     });
 };
 TxtVia.WebDB.insertInto.devices = function (device, callback) {
@@ -134,6 +131,13 @@ TxtVia.WebDB.getMessages = function (recipient, callback) {
         tx.executeSql('SELECT * FROM `messages` m LEFT JOIN contacts c ON c.number = m.recipient WHERE m.`recipient` = ? ORDER BY `messaged_at` ASC', [recipient], callback, TxtVia.WebDB.onError);
     });
 };
+TxtVia.WebDB.getMessagesCount = function (recipient, callback) {
+    TxtVia.WebDB.db.transaction(function (tx) {
+        tx.executeSql('SELECT count(*) c FROM `messages` WHERE `recipient` = ?', [recipient], function (tr, rs) {
+            callback(rs.rows.item(0).c);
+        }, TxtVia.WebDB.onError);
+    });
+};
 TxtVia.WebDB.getContact = function (number, callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
         tx.executeSql('SELECT * FROM `contacts` WHERE number = ? LIMIT 1', [number], callback, TxtVia.WebDB.onError);
@@ -149,11 +153,16 @@ TxtVia.WebDB.unReadMessageCount = function (callback) {
         tx.executeSql("SELECT COUNT(*) c FROM messages WHERE read = 0", [], callback, TxtVia.WebDB.onError);
     });
 };
+TxtVia.WebDB.v112Fix = function (callback) {
+    TxtVia.WebDB.db.transaction(function (tx) {
+        tx.executeSql("UPDATE messages SET messaged_at = created_at WHERE messaged_at = 'undefined'", [], callback, TxtVia.WebDB.onError);
+    });
+};
 TxtVia.Storage = function () {
-    if (!localStorage.env){
+    if (!localStorage.env) {
         localStorage.env = "production";
     }
-    if(!localStorage.version){
+    if (!localStorage.version) {
         localStorage.version = '1.0.3';
     }
     if (!localStorage.unReadMessages) {

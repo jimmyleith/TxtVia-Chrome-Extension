@@ -35,13 +35,33 @@ Background.init = function () {
 Background.isError = false;
 Background.Update = function () {
     var version = parseInt(localStorage.version.replace(/\./g, ''), 10);
+
+    function bumpVersion(v) {
+        if (v !== localStorage.version) {
+            localStorage.version = v;
+            Background.notify.migrated();
+        }
+        if (v !== chrome.app.getDetails().version) {
+
+            Background.Update();
+        }
+    }
     if (version < 110) {
         Background.Migrate.v110();
-        localStorage.version = '1.1.0';
-        Background.Update();
+        bumpVersion("1.1.0");
         return;
     }
-    localStorage.version = chrome.app.getDetails().version;
+    if (version === 1111) {
+        Background.Migrate.v112();
+        bumpVersion("1.1.2");
+        return;
+    }
+    if (version < 112) {
+        Background.Migrate.v112();
+        bumpVersion("1.1.2");
+        return;
+    }
+    bumpVersion(chrome.app.getDetails().version);
 };
 Background.Migrate = {};
 Background.Migrate.v110 = function () {
@@ -49,6 +69,10 @@ Background.Migrate.v110 = function () {
     localStorage.removeItem("devices");
     localStorage.removeItem("contacts");
 };
+Background.Migrate.v112 = function () {
+
+};
+
 Background.Process = {
     isError: false,
     completed: 0,
@@ -204,7 +228,7 @@ Background.Process.Get.messages = function () {
         },
         error: function (e) {
             console.error("[Background.Process.Get.messages] failed : " + e.responseText);
-            if(e.status === 401){
+            if (e.status === 401) {
                 localStorage.authToken = "";
             }
         }
@@ -229,16 +253,13 @@ Background.Process.fullDownload = function (callback) {
     Background.Process.Get.messages();
     Background.Process.onDevices();
 };
-Background.Process.onDevices = function(){
+Background.Process.onDevices = function () {
     if (Background.Process.completed >= 2) {
         TxtVia.WebDB.getDevices(function (t, r) {
             if (r.rows.length > 0) {
                 Background.notify.syncComplete();
             }
         });
-        try{
-            callback();
-        }catch(e){}
         Background.Process.completed = 0;
     } else {
         setTimeout(Background.Process.onDevices, 500);
@@ -257,7 +278,9 @@ Background.notify.icon = function () {
 
 };
 Background.notify.newMessage = function (message) {
-    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/newMessage.png'), "New message from " + message.name, message.body);
+    var name, notification;
+    name = (message.name ? TxtVia.TextUtil.removeNumber(message.name) : message.recipient);
+    notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/newMessage.png'), "New message from " + name, message.body);
     notification.ondisplay = function () {
         var sound;
         if ($.parseJSON(localStorage.enableSounds)) {
@@ -406,6 +429,18 @@ Background.notify.syncComplete = function (message) {
                 notification.cancel();
             }, 5000);
         }
+    };
+    notification.onclick = function () {
+        notification.cancel();
+    };
+    notification.show();
+};
+Background.notify.migrated = function () {
+    var notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/complete.png'), "Great news", "TxtVia has been updated to version " + localStorage.version);
+    notification.ondisplay = function () {
+        setTimeout(function () {
+            notification.cancel();
+        }, 5000);
     };
     notification.onclick = function () {
         notification.cancel();

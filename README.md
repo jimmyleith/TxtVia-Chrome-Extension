@@ -8,14 +8,27 @@ View [Downloads](http://txtvia.com/download) for multiple devices and browsers.
 
 Updates
 ====
+v1.1.2
+----
+* Updated description.
+* Fixed jumping scroll when sending message.
+* Update datebase to recover missing message times.
+* Added message count to threads.
+* Removed number from New Message notification.
+* Removed number from Thread view.
+
 v1.1.1.1
+----
 * Fixed a Typo that would cause a failure to display the popup.
+
 v1.1.1
+----
 * Fixed Major issues causing connection and display issues for all users.
 * Updated Notices Icons.
 * Added more fail recovery preceptors
 
 v1.1.0.3
+----
 * Fixed client not showing messages for the second run.
 
 v1.1.0.2

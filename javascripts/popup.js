@@ -50,7 +50,7 @@ var PopUp = (function () {
             }
 
         },
-        onReady:function(){
+        onReady: function () {
             console.log("[PopUp] Loaded...");
             $("body").addClass("loaded");
         },
@@ -61,16 +61,16 @@ var PopUp = (function () {
                     localStorage.firstLaunch = false;
                     console.log('[PopUp.Init] First Launch');
                     $("body").addClass("firstLaunch").removeClass("unlocked main steps");
-                    try{
+                    try {
                         setTimeout(callback, 2000);
-                    }catch(er1){}
+                    } catch (er1) {}
                     PopUp.onReady();
                 } else {
                     console.log('[PopUp.Init] Normal Launch');
                     $("body").removeClass('firstLaunch');
-                    try{
+                    try {
                         callback();
-                    }catch(er2){}
+                    } catch (er2) {}
                 }
             },
             authToken: function (callback) {
@@ -81,9 +81,9 @@ var PopUp = (function () {
                 } else {
                     console.log('[PopUp.Init] Auth Token');
                     $("body").addClass("unlocked").removeClass("locked");
-                    try{
+                    try {
                         callback();
-                    }catch(err){}
+                    } catch (err) {}
                 }
             },
             client: function (callback) {
@@ -100,9 +100,9 @@ var PopUp = (function () {
                 } else {
                     console.log('[PopUp.Init] Client registered');
                     $(".steps ol li:eq(0)").addClass("done");
-                    try{
+                    try {
                         callback();
-                    }catch(err){}
+                    } catch (err) {}
                 }
             },
             devices: function () {
@@ -117,7 +117,7 @@ var PopUp = (function () {
                                 PopUp.Check.devices();
                             });
                             $("body").removeClass('main').addClass("steps");
-                            
+
                         } else {
                             console.log('[PopUp.Init] ' + r.rows.length + ' devices registered');
                             PopUp.Process.view();
@@ -163,19 +163,21 @@ var PopUp = (function () {
                 console.log("Rendering Threads");
                 $("#threads ul li:not(.new_message)").remove();
                 TxtVia.WebDB.getConversations(function (message) {
-                    var li = $("<li>", {
+                    var li, avatar, img, h3, p, count;
+
+                    li = $("<li>", {
                         'class': 'clearfix'
-                    }),
-                        avatar = message.photo_url ? message.photo_url + "?access_token=" + localStorage.googleToken : chrome.extension.getURL('/images/user_profile_image50.png'),
+                    });
+                    avatar = message.photo_url ? message.photo_url + "?access_token=" + localStorage.googleToken : chrome.extension.getURL('/images/user_profile_image50.png');
                     //Contact.lookup(message.recipient).avatar ? Contact.lookup(message.recipient).avatar: '/images/user_profile_image50.png',
                     img = $("<img>", {
                         'class': 'avatar',
                         src: avatar
-                    }).hide().data('photo_url', message.photo_url),
-                        h3 = $("<h3>", {
-                        html: message.name ? message.name : message.recipient
-                    }),
-                        p = $("<p>", {
+                    }).hide().data('photo_url', message.photo_url);
+                    h3 = $("<h3>", {
+                        html: (message.name ? TxtVia.TextUtil.removeNumber(message.name) : message.recipient)
+                    });
+                    p = $("<p>", {
                         text: message.body
                     });
                     img.error(function () {
@@ -184,6 +186,13 @@ var PopUp = (function () {
                         el.attr('src', chrome.extension.getURL('/images/user_profile_image50.png'));
                     }).bind('load', function () {
                         $(this).fadeIn();
+                    });
+                    TxtVia.WebDB.getMessagesCount(message.recipient, function (value) {
+                        h3.append(" ");
+                        h3.append($("<abbr>", {
+                            text: "(" + value + ")",
+                            title: value + " messages between you and " + TxtVia.TextUtil.removeNumber(message.name)
+                        }));
                     });
                     li.append(img).append(h3).append(p);
                     li.bind("click", function () {
@@ -205,16 +214,16 @@ var PopUp = (function () {
                     'class': 'avatar',
                     src: avatar
                 }).hide().data('photo_url', conversation.photo_url);
-                try{
-                img.bind('load', function () {
-                    $(this).fadeIn();
-                }).error(function () {
-                    PopUp.Actions.updateGoogleToken();
-                    $(this).attr('src', chrome.extension.getURL('/images/user_profile_image30.png'));
-                });
-            }catch(err){
-                console.log("[PopUp.Process.thread] can't load image");
-            }
+                try {
+                    img.bind('load', function () {
+                        $(this).fadeIn();
+                    }).error(function () {
+                        PopUp.Actions.updateGoogleToken();
+                        $(this).attr('src', chrome.extension.getURL('/images/user_profile_image30.png'));
+                    });
+                } catch (err) {
+                    console.log("[PopUp.Process.thread] can't load image");
+                }
                 $(".thread header hgroup").empty().append(img).append(header);
                 $("form input[name=recipient]").val(conversation.recipient);
 
@@ -228,15 +237,15 @@ var PopUp = (function () {
             threadConversation: function (recipient) {
                 $(".thread ol").empty();
                 TxtVia.WebDB.getMessages(recipient, function (t, r) {
-                    var i;
-                    for (i = 0; i < r.rows.length; i++) {
+                    var i, li, message, time;
+                    for (i = 0; i < r.rows.length; i = i + 1) {
 
-                        var message = r.rows.item(i),
-                            li = $("<li>", {
+                        message = r.rows.item(i);
+                        li = $("<li>", {
                             'class': message.sent_at ? "sent" : "received",
                             html: message.body + "&nbsp;"
-                        }),
-                            time = $("<time>", {
+                        });
+                        time = $("<time>", {
                             datetime: $.timeago(message.messaged_at),
                             html: $.timeago(message.messaged_at)
                         });
@@ -260,7 +269,7 @@ var PopUp = (function () {
             display: function () {
                 var login = $("<a>", {
                     href: "#",
-                    'class':'login',
+                    'class': 'login',
                     text: "Login",
                     click: function () {
                         PopUp.Actions.loginLink();
@@ -268,7 +277,7 @@ var PopUp = (function () {
                 }),
                     logout = $("<a>", {
                     href: "#",
-                    'class':'logout',
+                    'class': 'logout',
                     text: "Logout",
                     click: function () {
                         PopUp.Actions.logoutLink();
@@ -277,7 +286,7 @@ var PopUp = (function () {
                     hr = $("<hr>"),
                     sync = $("<a>", {
                     href: "#",
-                    'class':'sync',
+                    'class': 'sync',
                     text: "Sync",
                     click: function () {
                         PopUp.Actions.syncLink();
@@ -285,7 +294,7 @@ var PopUp = (function () {
                 }),
                     donate = $("<a>", {
                     href: 'http://txtvia.com/donate_now',
-                    'class':'donate',
+                    'class': 'donate',
                     text: "Donate",
                     click: function () {
                         PopUp.Actions.donateLink();
@@ -334,38 +343,39 @@ var PopUp = (function () {
                 });
 
                 $("form#new_message").bind("submit", function (e) {
-                    var self = $(this);
+                    var self = $(this),
+                        pendingMessages, li, body_p, header, article, time, item;
                     if ($("form#new_message textarea").val().length > 0) {
 
                         $("form#new_message").addClass("loading");
                         $(":input[name=device_id]").val($(":input[name=device]").val());
                         // append message to pendingQueue
-                        var pendingMessages = $.parseJSON(localStorage.pendingMessages),
-                            item = {
+                        pendingMessages = $.parseJSON(localStorage.pendingMessages);
+                        item = {
                             "data": $(this).serialize()
-                        },
-                            body_p = $("<p>", {
+                        };
+                        body_p = $("<p>", {
                             text: $(this).find(":input[name='body']").val()
-                        }),
-                            header = $("<header>", {
+                        });
+                        header = $("<header>", {
                             text: $(this).find(":input[name='recipient']").val()
-                        }),
-                            article = $("<article>").append(header).append(body_p);
+                        });
+                        article = $("<article>").append(header).append(body_p);
 
                         $("#sent .messages").append(article);
 
 
-                        var li = $("<li>", {
+                        li = $("<li>", {
                             'class': "sent sending",
                             html: self.find("textarea").val() + "&nbsp;"
-                        }),
-                            time = $("<time>", {
+                        });
+                        time = $("<time>", {
                             html: "sending&hellip;"
                         });
                         li.append(time);
                         $(".thread ol").append(li);
                         $(".thread .scroll").animate({
-                            scrollTop: $(".thread .scroll").height()
+                            scrollTop: $(".thread .scroll ol").height()
                         });
                         pendingMessages.push(item);
                         localStorage.pendingMessages = JSON.stringify(pendingMessages);
@@ -427,11 +437,11 @@ var PopUp = (function () {
                 }, function (token) {
                     $("img.avatar").each(function () {
                         var url = $(this).data('photo_url');
-                        if(url){
+                        if (url) {
                             $(this).fadeOut(function () {
                                 $(this).attr('src', url + "?access_token=" + token);
-                                $(this).bind('load',function(){
-                                   $(this).fadeIn(); 
+                                $(this).bind('load', function () {
+                                    $(this).fadeIn();
                                 });
                             });
                         }
@@ -518,7 +528,7 @@ var PopUp = (function () {
                 $("select[name=device]").empty();
                 TxtVia.WebDB.getDevices(function (t, r) {
                     var i, device;
-                    for (i = 0; i < r.rows.length; i++) {
+                    for (i = 0; i < r.rows.length; i = i + 1) {
                         device = r.rows.item(i);
                         $("body").removeClass("firstLaunch steps").addClass("main");
                         if (device.device_type !== "client") {
