@@ -16,6 +16,10 @@ v1.1.2
 * Added message count to threads.
 * Removed number from New Message notification.
 * Removed number from Thread view.
+* Fixed rare occasion of failing to register client with TxtVia.
+* Improved logout procedure.
+* Improved re-authentication procedure.  
+* Realised, messages would fail to send due to Local Database issue.
 
 v1.1.1.1
 ----

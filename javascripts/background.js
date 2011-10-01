@@ -70,7 +70,7 @@ Background.Migrate.v110 = function () {
     localStorage.removeItem("contacts");
 };
 Background.Migrate.v112 = function () {
-
+    TxtVia.WebDB.v112Fix();
 };
 
 Background.Process = {
@@ -82,6 +82,8 @@ Background.Process.Post = {};
 Background.Process.Post.messagesTries = 0;
 Background.Process.Post.messages = function () {
     var pendingMessages = $.parseJSON(localStorage.pendingMessages);
+    failedMessages = $.parseJSON(localStorage.failedMessages);
+    
     if (pendingMessages.length > 0 && window.navigator.onLine && localStorage.authToken) {
         console.log("[Background.Process.message] preparing to send message");
         $.ajax({
@@ -122,6 +124,8 @@ Background.Process.Post.messages = function () {
                     }
                     if (Background.Process.Post.messagesTries >= 5) {
                         Background.notify.message.skipped(pendingMessages[0]);
+                        failedMessages.push(pendingMessages[0]);
+                        localStorage.failedMessages = JSON.stringify(failedMessages);
                         pendingMessages.shift();
                         localStorage.pendingMessages = JSON.stringify(pendingMessages);
                         localStorage.pendingMessages = JSON.stringify(pendingMessages);
@@ -139,7 +143,7 @@ Background.Process.Post.messages = function () {
 };
 Background.Process.Post.client = function (callback) {
 
-    if (Background.Process.lock === false) {
+    if (Background.Process.lock === false && localStorage.auth_token !== '') {
         $.ajax({
             url: TxtVia.url + "/devices.json",
             type: "POST",
@@ -156,7 +160,7 @@ Background.Process.Post.client = function (callback) {
                     Background.Process.Get.device();
                 } else {
                     console.error("[Background.Process.Post.client] failed : " + e.responseText);
-                    Background.notify.client.failed();
+                    Background.notify.client.failed(e.status);
                 }
             },
             complete: function () {
@@ -166,6 +170,8 @@ Background.Process.Post.client = function (callback) {
                 }
             }
         });
+    }else{
+        Background.notify.client.failed(401);
     }
 };
 
@@ -241,6 +247,11 @@ Background.Process.Get.device = function () {
         success: function (data) {
             localStorage.clientId = data.id;
             Background.notify.client.restored(data);
+            chrome.extension.sendRequest({
+                device: data
+            }, function () {
+                console.log("[Background.Process.Get.device] sent to display");
+            });
         },
         error: function (e) {
             console.error("[Background.Process.Get.device] failed : " + e.responseText);
@@ -258,6 +269,11 @@ Background.Process.onDevices = function () {
         TxtVia.WebDB.getDevices(function (t, r) {
             if (r.rows.length > 0) {
                 Background.notify.syncComplete();
+                chrome.extension.sendRequest({
+                    device: true
+                }, function () {
+                    console.log("[Background.Process.Get.device] sent to display");
+                });
             }
         });
         Background.Process.completed = 0;
@@ -354,9 +370,7 @@ Background.notify.client.failed = function (status) {
     switch (status) {
     case 401:
         action = function () {
-            chrome.tabs.create({
-                url: TxtVia.url + '/sign_in?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
-            });
+            TxtVia.Authenticate();
         };
         message = "Failed to successfully login to TxtVia. \n\rClick here re-authenticate.";
         break;
@@ -367,7 +381,7 @@ Background.notify.client.failed = function (status) {
         action = function () {
             Background.Process.Post.client();
         };
-        message = "Failed to successfully setup device with TxtVia.\n\r Click here to try again.";
+        message = "Failed to successfully setup client with TxtVia.\n\r Click here to try again.";
         break;
     }
     notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/failed.png'), "Awe damn", message);

@@ -32,6 +32,11 @@ var PopUp = (function () {
                     PopUp.Actions.unlock();
                 }
             });
+            $("select[name=device]").change(function(){
+                var device_id = $(this).val();
+                console.log('[Device Changed] to ' + device_id);
+                $("input[name=device_id]").val(device_id);
+            });
 
             try {
                 chrome.extension.onRequest.addListener(function (request, sender, callback) {
@@ -40,6 +45,8 @@ var PopUp = (function () {
                             PopUp.Process.threadConversation(request.message.recipient);
                         }
                         PopUp.Process.threads();
+                    } else if(request.device){
+                        PopUp.Check.devices();
                     } else {
                         console.log(request);
                     }
@@ -348,7 +355,7 @@ var PopUp = (function () {
                     if ($("form#new_message textarea").val().length > 0) {
 
                         $("form#new_message").addClass("loading");
-                        $(":input[name=device_id]").val($(":input[name=device]").val());
+                        // $(":input[name=device_id]").val($(":input[name=device]").val());
                         // append message to pendingQueue
                         pendingMessages = $.parseJSON(localStorage.pendingMessages);
                         item = {
@@ -397,16 +404,23 @@ var PopUp = (function () {
                 window.close();
                 // url:TxtVia.url + '/sign_in?app_identifier=' + TxtVia.appID + '&app_type=chrome'
             },
-            logoutLink: function () {
-                localStorage.authToken = "";
-                localStorage.clientId = 0;
-                localStorage.googleToken = "";
-                localStorage.unReadMessages = 0;
-                TxtVia.WebDB.purgeDB(true);
-                chrome.tabs.create({
-                    url: TxtVia.url + '/sign_out'
+            logoutLink: function () {                
+                $.ajax({
+                    url: TxtVia.url + '/sign_out.json',
+                    beforeSend:function(){
+                        localStorage.authToken = "";
+                        localStorage.clientId = 0;
+                        localStorage.googleToken = "";
+                        localStorage.unReadMessages = 0;
+                        TxtVia.WebDB.purgeDB(true);
+                    },
+                    failed:function(){
+                        alert('Failed to properly logout, please try again.');
+                    },
+                    success:function(){
+                        window.close();
+                    }
                 });
-                window.close();
             },
             download: function (app) {
                 switch (app) {
@@ -534,10 +548,12 @@ var PopUp = (function () {
                         if (device.device_type !== "client") {
                             $("select[name=device]").append($("<option>", {
                                 text: device.name,
-                                value: device.id
+                                value: device.device_id
                             }));
                         }
                     }
+                    $("input[name=device_id]").val(device.device_id);
+                    $("select[name=device]").val(device.device_id);
                 });
             }
         }

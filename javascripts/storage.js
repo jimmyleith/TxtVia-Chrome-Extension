@@ -28,7 +28,7 @@ TxtVia.WebDB.createTables = function () {
         tx.executeSql('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY ASC, message_id INTEGER UNIQUE NOT NULL, device_id INTEGER NOT NULL, client_id INTEGER, recipient TEXT NOT NULL, body TEXT NOT NULL, read INTEGER DEFAULT 0, messaged_at DATEIME NOT NULL, sent_at DATETIME, received_at DATETIME, created_at DATETIME)', [], function (tx, r) {
             console.log('[TxtVia.WebDB.createTables] messages created');
         }, TxtVia.WebDB.onError);
-        tx.executeSql('CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY ASC, name TEXT, device_type TEXT, unique_id TEXT UNIQUE NOT NULL, carrier TEXT)', [], function (tx, r) {
+        tx.executeSql('CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY ASC, device_id INTEGER NOT NULL UNIQUE, name TEXT, device_type TEXT, unique_id TEXT UNIQUE NOT NULL, carrier TEXT)', [], function (tx, r) {
             console.log('[TxtVia.WebDB.createTables] devices created');
         }, TxtVia.WebDB.onError);
         tx.executeSql('CREATE TABLE IF NOT EXISTS contacts (name TEXT, number TEXT UNIQUE NOT NULL, photo_url TEXT)', [], function (tx, r) {
@@ -75,7 +75,7 @@ TxtVia.WebDB.insertInto.messages = function (message, callback) {
 };
 TxtVia.WebDB.insertInto.devices = function (device, callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
-        tx.executeSql('INSERT INTO devices(name, device_type, carrier, unique_id) VALUES (?,?,?,?)', [device.name, device.device_type, device.carrier, device.unique_id], callback, TxtVia.WebDB.onError);
+        tx.executeSql('INSERT INTO devices(name, device_id, device_type, carrier, unique_id) VALUES (?,?,?,?,?)', [device.name, device.id, device.device_type, device.carrier, device.unique_id], callback, TxtVia.WebDB.onError);
     });
 };
 TxtVia.WebDB.insertInto.contacts = function (contact, callback) {
@@ -155,7 +155,10 @@ TxtVia.WebDB.unReadMessageCount = function (callback) {
 };
 TxtVia.WebDB.v112Fix = function (callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
-        tx.executeSql("UPDATE messages SET messaged_at = created_at WHERE messaged_at = 'undefined'", [], callback, TxtVia.WebDB.onError);
+        tx.executeSql("UPDATE messages SET messaged_at = created_at WHERE messaged_at = 'undefined'", [], callback, TxtVia.WebDB.onError);        
+    });
+    TxtVia.WebDB.db.transaction(function (tx) {
+        tx.executeSql("ALTER TABLE devices ADD device_id INTEGER", [], callback, TxtVia.WebDB.onError);
     });
 };
 TxtVia.Storage = function () {
@@ -163,7 +166,7 @@ TxtVia.Storage = function () {
         localStorage.env = "production";
     }
     if (!localStorage.version) {
-        localStorage.version = '1.0.3';
+        localStorage.version = '1.1.2';
     }
     if (!localStorage.unReadMessages) {
         localStorage.unReadMessages = 0;
@@ -182,6 +185,9 @@ TxtVia.Storage = function () {
     }
     if (!localStorage.pendingMessages) {
         localStorage.pendingMessages = JSON.stringify([]);
+    }
+    if (!localStorage.failedMessages) {
+        localStorage.failedMessages = JSON.stringify([]);
     }
     if (!localStorage.autoHideNotifications) {
         localStorage.autoHideNotifications = true;

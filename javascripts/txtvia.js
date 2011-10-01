@@ -14,7 +14,7 @@ TxtVia.init = function () {
         async: true,
         crossDomain: true,
         dataType: "json",
-        timeout: 4000
+        timeout: 60000
     });
     if (window.chrome) {
         try {
@@ -83,4 +83,17 @@ TxtVia.TextUtil.removeNumber = function (number) {
     } catch (err) {
         console.log("[TxtVia.TextUtil.removeNumber] can't remove number : " + number);
     }
+};
+TxtVia.Authenticate = function(){
+    $.ajax({
+        url: TxtVia.url + '/sign_out.json',
+        beforeSend:function(){
+            localStorage.authToken = "";
+        },
+        complete:function(){
+            chrome.tabs.create({
+                url: TxtVia.url + '/sign_in?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
+            });
+        }
+    });
 };
