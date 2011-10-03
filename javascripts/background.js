@@ -31,7 +31,7 @@ Background.init = function () {
     Background.onAuthenticated();
 };
 Background.waitForAuth = function(){
-    if(Background.authenticated){
+    if(Background.authenticated()){
         console.log("[Background.waitForAuth] Authenticated");
         Background.onAuthenticated();
     }else{
@@ -40,9 +40,14 @@ Background.waitForAuth = function(){
         },500);
     } 
 };
-Background.authenticated = localStorage.authToken.length > 0;
+Background.authenticated = function(){
+    if(localStorage.authToken){
+        return localStorage.authToken.length > 0;
+    }
+    return false;
+};
 Background.onAuthenticated = function(){
-    if(Background.authenticated){
+    if(Background.authenticated()){
         if ($.parseJSON(localStorage.clientId) === 0) {
             Background.Process.Post.client();
         }
@@ -106,7 +111,7 @@ Background.Process.Post.messages = function () {
     var pendingMessages = $.parseJSON(localStorage.pendingMessages);
     failedMessages = $.parseJSON(localStorage.failedMessages);
     
-    if (pendingMessages.length > 0 && window.navigator.onLine && Background.authenticated) {
+    if (pendingMessages.length > 0 && window.navigator.onLine && Background.authenticated()) {
         console.log("[Background.Process.message] preparing to send message");
         $.ajax({
             url: TxtVia.url + "/messages.json",
@@ -165,7 +170,7 @@ Background.Process.Post.messages = function () {
 };
 Background.Process.Post.client = function (callback) {
 
-    if (Background.Process.lock === false && Background.authenticated) {
+    if (Background.Process.lock === false && Background.authenticated()) {
         $.ajax({
             url: TxtVia.url + "/devices.json",
             type: "POST",
@@ -198,7 +203,7 @@ Background.Process.Post.client = function (callback) {
 };
 
 Background.Process.Get.googleToken = function (callback) {
-    if (Background.Process.lock === false && Background.authenticated) {
+    if (Background.Process.lock === false && Background.authenticated()) {
         $.ajax({
             url: TxtVia.url + "/contacts/token.json?auth_token=" + localStorage.authToken,
             type: "GET",
@@ -219,7 +224,7 @@ Background.Process.Get.googleToken = function (callback) {
     }
 };
 Background.Process.Get.contacts = function () {
-    if (Background.authenticated){
+    if (Background.authenticated()){
         $.ajax({
             url: TxtVia.url + "/contacts.json?auth_token=" + localStorage.authToken,
             type: "GET",
@@ -243,7 +248,7 @@ Background.Process.Get.contacts = function () {
     }
 };
 Background.Process.Get.messages = function () {
-    if(Background.authenticated){
+    if(Background.authenticated()){
         $.ajax({
             url: TxtVia.url + "/messages.json?auth_token=" + localStorage.authToken,
             type: "GET",
@@ -266,7 +271,7 @@ Background.Process.Get.messages = function () {
     }
 };
 Background.Process.Poll.messages = function () {
-    if(!Background.Process.pollLock && Background.authenticated){
+    if(!Background.Process.pollLock && Background.authenticated()){
         $.ajax({
             url: TxtVia.url + "/messages/poll.json?auth_token=" + localStorage.authToken,
             type: "GET",

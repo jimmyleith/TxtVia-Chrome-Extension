@@ -21,7 +21,7 @@ v1.1.2
 * Improved re-authentication procedure.  
 * Realised, messages would fail to send due to Local Database issue.
 * Fixed device registration issues that would cause advance beyond setup screen.
-* Fixed selecting of device.
+* Fixed selecting of device.lk
 
 v1.1.1.1
 ----
