@@ -20,6 +20,8 @@ v1.1.2
 * Improved logout procedure.
 * Improved re-authentication procedure.  
 * Realised, messages would fail to send due to Local Database issue.
+* Fixed device registration issues that would cause advance beyond setup screen.
+* Fixed selecting of device.
 
 v1.1.1.1
 ----
