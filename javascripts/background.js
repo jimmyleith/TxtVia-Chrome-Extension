@@ -58,7 +58,8 @@ Background.onAuthenticated = function () {
 };
 Background.isError = false;
 Background.Update = function () {
-    var version = parseInt(localStorage.version.replace(/\./g, ''), 10);
+    var version = parseInt(localStorage.version.replace(/\./g, ''), 10),
+        current_version = parseInt(chrome.app.getDetails().version.replace(/\./g, ''), 10);
 
     function bumpVersion(v) {
         if (v !== localStorage.version) {
@@ -80,9 +81,9 @@ Background.Update = function () {
         bumpVersion("1.1.2");
         return;
     }
-    if (version < 112) {
+    if (version < 120) {
         Background.Migrate.v112();
-        bumpVersion("1.1.2");
+        bumpVersion("1.2.0");
         return;
     }
     bumpVersion(chrome.app.getDetails().version);

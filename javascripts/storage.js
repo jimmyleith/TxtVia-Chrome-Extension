@@ -1,7 +1,7 @@
 /**
  * @depend txtvia.js
  **/
-/*globals $, TxtVia, openDatabase,localStorage,console,alert,window,setTimeout,setInterval,clearTimeout */
+/*globals $, TxtVia, chrome, openDatabase,localStorage,console,alert,window,setTimeout,setInterval,clearTimeout */
 TxtVia.WebDB = {};
 TxtVia.WebDB.db = null;
 TxtVia.WebDB.open = function () {
@@ -155,7 +155,7 @@ TxtVia.WebDB.unReadMessageCount = function (callback) {
 };
 TxtVia.WebDB.v112Fix = function (callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
-        tx.executeSql("UPDATE messages SET messaged_at = created_at WHERE messaged_at = 'undefined'", [], callback, TxtVia.WebDB.onError);        
+        tx.executeSql("UPDATE messages SET messaged_at = created_at WHERE messaged_at = 'undefined'", [], callback, TxtVia.WebDB.onError);
     });
     TxtVia.WebDB.db.transaction(function (tx) {
         tx.executeSql("ALTER TABLE devices ADD device_id INTEGER", [], callback, TxtVia.WebDB.onError);
@@ -166,7 +166,7 @@ TxtVia.Storage = function () {
         localStorage.env = "production";
     }
     if (!localStorage.version) {
-        localStorage.version = '1.1.2';
+        localStorage.version = chrome.app.getDetails().version;
     }
     if (!localStorage.unReadMessages) {
         localStorage.unReadMessages = 0;

@@ -1,6 +1,6 @@
 {
   "name":"TxtVia",
-  "version":"1.2",
+  "version":"1.2.0",
   "description":"Send and Receive SMS messages from your phone using Google Chrome. Use our own number and credit.",
   "icons": { "16": "images/icon16.png",
              "48": "images/icon48.png",
