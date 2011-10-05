@@ -26,23 +26,36 @@ end
 
 desc "Build and ZIP"
 task :build do
-  puts "Compiling JavaScript"
-  Rake::Task['juicer'].invoke
-  puts "Completed Javascript Compile"
+  manifest = JSON.parse(File.read('manifest.json'))
   
+  puts "-"*50
+  puts "Building #{manifest['name']}"
+  puts "-"*50
+  
+  
+  Rake::Task['juicer'].invoke
+  
+  system "rm -rf precompiled"
   system "mkdir precompiled"
   
-  system "cp * precompiled/*"
+  system "cp * precompiled/"
+  system "cp -r css/ precompiled/css"
+  system "cp -r images/ precompiled/images"
+  system "cp -r javascripts/ precompiled/javascripts/"
   
-  system "rm precompiled/javascripts/background.js"
-  system "rm precompiled/javascripts/popup.js"
-  system "rm precompiled/javascripts/storage.js"
+  system "rm precompiled/*.png"
+  system "rm precompiled/javascripts/*.js"
+  system "cp javascripts/*.min.js precompiled/javascripts/"
   system "rm precompiled/Gemfile"
   system "rm precompiled/Gemfile.lock"
   system "rm precompiled/Rakefile"
   
-  manifest = File.read('manifest.json')
   
-  system "mkdir builds"
-  system "zip txtvia#{manifest.version}.zip precompiled/**"
+  system "mkdir build"
+  system "zip -r build/#{manifest['name']}_#{manifest['version']}.zip precompiled/"
+  
+  puts "-"*50
+  puts "Completed build of #{manifest['name']}"
+  puts "-"*50
+
 end

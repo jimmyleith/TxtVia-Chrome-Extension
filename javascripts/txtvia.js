@@ -84,13 +84,13 @@ TxtVia.TextUtil.removeNumber = function (number) {
         console.log("[TxtVia.TextUtil.removeNumber] can't remove number : " + number);
     }
 };
-TxtVia.Authenticate = function(){
+TxtVia.Authenticate = function () {
     $.ajax({
         url: TxtVia.url + '/sign_out.json',
-        beforeSend:function(){
+        beforeSend: function () {
             localStorage.authToken = "";
         },
-        complete:function(){
+        complete: function () {
             chrome.tabs.create({
                 url: TxtVia.url + '/sign_in?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
             });

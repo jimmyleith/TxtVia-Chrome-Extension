@@ -1,0 +1,56 @@
+v1.2
+----
+* Updated description.
+* Fixed jumping scroll when sending message.
+* Update datebase to recover missing message times.
+* Added message count to threads.
+* Removed number from New Message notification.
+* Removed number from Thread view.
+* Fixed rare occasion of failing to register client with TxtVia.
+* Improved logout procedure.
+* Improved re-authentication procedure.  
+* Realised, messages would fail to send due to Local Database issue.
+* Fixed device registration issues that would cause advance beyond setup screen.
+* Fixed selecting of device.
+* Save current thread and draft test.
+
+v1.1.1.1
+----
+* Fixed a Typo that would cause a failure to display the popup.
+
+v1.1.1
+----
+* Fixed Major issues causing connection and display issues for all users.
+* Updated Notices Icons.
+* Added more fail recovery preceptors
+
+v1.1.0.3
+----
+* Fixed client not showing messages for the second run.
+
+v1.1.0.2
+----
+* Fixed registering new client.
+
+v1.1.0.1
+----
+* Fixed message page reloading to different conversation.
+* Fixed Google Contacts display Unknown Number.
+* Improved messaging performance.
+* Closing PopUp when sending a message will sill send message.
+* Disallowed sending of duplicate messages in rapid succession.
+* Auto scroll to newest message in conversation.
+* Locally stored Google Contacts.
+* Added message alert sounds.
+* Improved unread message count.
+* Logout now removes contacts, message and device detail.
+
+v1.0.3
+-----
+* Major bug fixes
+
+v1.0.2
+-----
+* Added link to download Android Application from App.
+* Subtle functionality improvements.
+* Bug Fixes.

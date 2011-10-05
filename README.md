@@ -6,64 +6,25 @@ Giving general users the ability to send SMS messages and receive from your comp
 
 View [Downloads](http://txtvia.com/download) for multiple devices and browsers. 
 
-Updates
-====
-v1.2
+Development Setup
 ----
-* Updated description.
-* Fixed jumping scroll when sending message.
-* Update datebase to recover missing message times.
-* Added message count to threads.
-* Removed number from New Message notification.
-* Removed number from Thread view.
-* Fixed rare occasion of failing to register client with TxtVia.
-* Improved logout procedure.
-* Improved re-authentication procedure.  
-* Realised, messages would fail to send due to Local Database issue.
-* Fixed device registration issues that would cause advance beyond setup screen.
-* Fixed selecting of device.
-* Save current thread and draft test.
 
-v1.1.1.1
-----
-* Fixed a Typo that would cause a failure to display the popup.
+Once you've checked out the source code, you will need to build the javascript files.
 
-v1.1.1
-----
-* Fixed Major issues causing connection and display issues for all users.
-* Updated Notices Icons.
-* Added more fail recovery preceptors
+    rake juicer
+    
+Alternatively run `rake juicer:debug` to make a human readable version.
 
-v1.1.0.3
-----
-* Fixed client not showing messages for the second run.
 
-v1.1.0.2
-----
-* Fixed registering new client.
+When your ready to publish a new version, ensure you Bump the version in the `manifest.json` and update `CHANGES` with your change breakdown.
 
-v1.1.0.1
-----
-* Fixed message page reloading to different conversation.
-* Fixed Google Contacts display Unknown Number.
-* Improved messaging performance.
-* Closing PopUp when sending a message will sill send message.
-* Disallowed sending of duplicate messages in rapid succession.
-* Auto scroll to newest message in conversation.
-* Locally stored Google Contacts.
-* Added message alert sounds.
-* Improved unread message count.
-* Logout now removes contacts, message and device detail.
+You'll need to build and zip the extension.
 
-v1.0.3
------
-* Major bug fixes
+    rake build
+    
+Now its ready for staging and production.
 
-v1.0.2
------
-* Added link to download Android Application from App.
-* Subtle functionality improvements.
-* Bug Fixes.
+It's best practice to point your browser to use the `precompiled` version of TxtVia to ensure all is working correctly.
 
 
 ----

@@ -30,24 +30,24 @@ Background.init = function () {
     Background.notify.icon();
     Background.onAuthenticated();
 };
-Background.waitForAuth = function(){
-    if(Background.authenticated()){
+Background.waitForAuth = function () {
+    if (Background.authenticated()) {
         console.log("[Background.waitForAuth] Authenticated");
         Background.onAuthenticated();
-    }else{
-        setTimeout(function(){
+    } else {
+        setTimeout(function () {
             Background.waitForAuth();
-        },500);
-    } 
+        }, 500);
+    }
 };
-Background.authenticated = function(){
-    if(localStorage.authToken){
+Background.authenticated = function () {
+    if (localStorage.authToken) {
         return localStorage.authToken.length > 0;
     }
     return false;
 };
-Background.onAuthenticated = function(){
-    if(Background.authenticated()){
+Background.onAuthenticated = function () {
+    if (Background.authenticated()) {
         if ($.parseJSON(localStorage.clientId) === 0) {
             Background.Process.Post.client();
         }
@@ -108,9 +108,9 @@ Background.Process.Post = {};
 Background.Process.Poll = {};
 Background.Process.Post.messagesTries = 0;
 Background.Process.Post.messages = function () {
-    var pendingMessages = $.parseJSON(localStorage.pendingMessages);
-    failedMessages = $.parseJSON(localStorage.failedMessages);
-    
+    var pendingMessages = $.parseJSON(localStorage.pendingMessages),
+        failedMessages = $.parseJSON(localStorage.failedMessages);
+
     if (pendingMessages.length > 0 && window.navigator.onLine && Background.authenticated()) {
         console.log("[Background.Process.message] preparing to send message");
         $.ajax({
@@ -197,7 +197,7 @@ Background.Process.Post.client = function (callback) {
                 }
             }
         });
-    }else{
+    } else {
         Background.notify.client.failed(401);
     }
 };
@@ -224,7 +224,7 @@ Background.Process.Get.googleToken = function (callback) {
     }
 };
 Background.Process.Get.contacts = function () {
-    if (Background.authenticated()){
+    if (Background.authenticated()) {
         $.ajax({
             url: TxtVia.url + "/contacts.json?auth_token=" + localStorage.authToken,
             type: "GET",
@@ -248,7 +248,7 @@ Background.Process.Get.contacts = function () {
     }
 };
 Background.Process.Get.messages = function () {
-    if(Background.authenticated()){
+    if (Background.authenticated()) {
         $.ajax({
             url: TxtVia.url + "/messages.json?auth_token=" + localStorage.authToken,
             type: "GET",
@@ -271,16 +271,16 @@ Background.Process.Get.messages = function () {
     }
 };
 Background.Process.Poll.messages = function () {
-    if(!Background.Process.pollLock && Background.authenticated()){
+    if (!Background.Process.pollLock && Background.authenticated()) {
         $.ajax({
             url: TxtVia.url + "/messages/poll.json?auth_token=" + localStorage.authToken,
             type: "GET",
-            complete:function(){
+            complete: function () {
                 Background.Process.Poll.lock = false;
-                setTimeout(function(){
+                setTimeout(function () {
                     Background.Process.pollLock = true;
                     Background.Process.Poll.messages();
-                },30000);
+                }, 30000);
             },
             error: function (e) {
                 console.error("[Background.Process.Get.messages] failed : " + e.responseText);
@@ -316,7 +316,7 @@ Background.Process.onDevices = function (callback) {
     if (Background.Process.completed >= 2) {
         TxtVia.WebDB.getDevices(function (t, r) {
             if (r.rows.length > 0) {
-                if(!callback){
+                if (!callback) {
                     Background.notify.syncComplete();
                 }
                 chrome.extension.sendRequest({

@@ -32,7 +32,7 @@ var PopUp = (function () {
                     PopUp.Actions.unlock();
                 }
             });
-            $("select[name=device]").change(function(){
+            $("select[name=device]").change(function () {
                 var device_id = $(this).val();
                 console.log('[Device Changed] to ' + device_id);
                 $("input[name=device_id]").val(device_id);
@@ -45,7 +45,7 @@ var PopUp = (function () {
                             PopUp.Process.threadConversation(request.message.recipient);
                         }
                         PopUp.Process.threads();
-                    } else if(request.device){
+                    } else if (request.device) {
                         PopUp.Check.devices();
                     } else {
                         console.log(request);
@@ -60,7 +60,7 @@ var PopUp = (function () {
         onReady: function () {
             console.log("[PopUp] Loaded...");
             $("body").addClass("loaded");
-            if($.parseJSON(localStorage.currentThread)){
+            if ($.parseJSON(localStorage.currentThread)) {
                 console.log("Opening Thread " + $.parseJSON(localStorage.currentThread).recipient);
                 PopUp.Process.thread($.parseJSON(localStorage.currentThread), PopUp.Actions.gotToThread);
             }
@@ -119,9 +119,9 @@ var PopUp = (function () {
             devices: function () {
                 if (PopUp.Check.tries < 5) {
                     TxtVia.WebDB.getDevices(function (t, r) {
-                        var devices = [];
-                        for(i=0;i<r.rows.length;i++){
-                            if(r.rows.item(i).device_type != "client"){
+                        var devices = [], i;
+                        for (i = 0; i < r.rows.length; i++) {
+                            if (r.rows.item(i).device_type != "client") {
                                 devices.push(r.rows.item(i));
                             }
                         }
@@ -232,7 +232,8 @@ var PopUp = (function () {
                     img = $("<img>", {
                     'class': 'avatar',
                     src: avatar
-                }).hide().data('photo_url', conversation.photo_url);
+                }).hide().data('photo_url', conversation.photo_url),
+                    currentThread = $.parseJSON(localStorage.currentThread);
                 try {
                     img.bind('load', function () {
                         $(this).fadeIn();
@@ -245,9 +246,11 @@ var PopUp = (function () {
                 }
                 $(".thread header hgroup").empty().append(img).append(header);
                 $("form input[name=recipient]").val(conversation.recipient);
+                if (currentThread && currentThread.recipient === conversation.recipient) {
+                    $("form#new_message textarea").focus().val(localStorage.draftMessage).trigger('keyup');
+                }
                 $("select[name=device]").val(conversation.device_id);
                 PopUp.Process.threadConversation(conversation.recipient);
-
 
                 if (callback) {
                     callback();
@@ -419,20 +422,20 @@ var PopUp = (function () {
                 window.close();
                 // url:TxtVia.url + '/sign_in?app_identifier=' + TxtVia.appID + '&app_type=chrome'
             },
-            logoutLink: function () {                
+            logoutLink: function () {
                 $.ajax({
                     url: TxtVia.url + '/sign_out.json',
-                    beforeSend:function(){
+                    beforeSend: function () {
                         localStorage.authToken = "";
                         localStorage.clientId = 0;
                         localStorage.googleToken = "";
                         localStorage.unReadMessages = 0;
                         TxtVia.WebDB.purgeDB(true);
                     },
-                    failed:function(){
+                    failed: function () {
                         alert('Failed to properly logout, please try again.');
                     },
-                    success:function(){
+                    success: function () {
                         window.close();
                     }
                 });
