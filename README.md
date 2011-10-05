@@ -8,7 +8,7 @@ View [Downloads](http://txtvia.com/download) for multiple devices and browsers.
 
 Updates
 ====
-v1.1.2
+v1.2
 ----
 * Updated description.
 * Fixed jumping scroll when sending message.
@@ -21,7 +21,8 @@ v1.1.2
 * Improved re-authentication procedure.  
 * Realised, messages would fail to send due to Local Database issue.
 * Fixed device registration issues that would cause advance beyond setup screen.
-* Fixed selecting of device.lk
+* Fixed selecting of device.
+* Save current thread and draft test.
 
 v1.1.1.1
 ----

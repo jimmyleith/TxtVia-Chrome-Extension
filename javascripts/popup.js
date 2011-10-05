@@ -60,6 +60,10 @@ var PopUp = (function () {
         onReady: function () {
             console.log("[PopUp] Loaded...");
             $("body").addClass("loaded");
+            if($.parseJSON(localStorage.currentThread)){
+                console.log("Opening Thread " + $.parseJSON(localStorage.currentThread).recipient);
+                PopUp.Process.thread($.parseJSON(localStorage.currentThread), PopUp.Actions.gotToThread);
+            }
         },
         Check: {
             tries: 0,
@@ -211,6 +215,7 @@ var PopUp = (function () {
                     li.append(img).append(h3).append(p);
                     li.bind("click", function () {
                         console.log("Opening Thread " + message.recipient);
+                        localStorage.currentThread = JSON.stringify(message);
                         PopUp.Process.thread(message, PopUp.Actions.gotToThread);
                         // PopUp.Actions.gotToThread();
                     });
@@ -240,7 +245,7 @@ var PopUp = (function () {
                 }
                 $(".thread header hgroup").empty().append(img).append(header);
                 $("form input[name=recipient]").val(conversation.recipient);
-
+                $("select[name=device]").val(conversation.device_id);
                 PopUp.Process.threadConversation(conversation.recipient);
 
 
@@ -340,6 +345,7 @@ var PopUp = (function () {
 
             validateForm: function () {
                 $("textarea").bind("keyup", function () {
+                    localStorage.draftMessage = $(this).val();
                     if ($(this).val() === "") {
                         $("form#new_message").find("input[type=submit]").attr("disabled", "disabled");
                     } else {
@@ -392,6 +398,8 @@ var PopUp = (function () {
                             scrollTop: $(".thread .scroll ol").height()
                         });
                         pendingMessages.push(item);
+                        localStorage.currentThread = "";
+                        localStorage.draftMessage = "";
                         localStorage.pendingMessages = JSON.stringify(pendingMessages);
                         $(this).find("textarea").val("");
                     }
@@ -476,6 +484,7 @@ var PopUp = (function () {
             },
             backToThreads: function () {
                 $("body").removeClass("thread").addClass("threads");
+                localStorage.currentThread = "";
             },
             gotToThread: function (empty) {
                 if (empty) {

@@ -1,3 +1,4 @@
+require 'json'
 files = ['background','popup']
 
 desc "Merge and minify JavaScript documents"
@@ -21,4 +22,27 @@ namespace :juicer do
       puts `juicer verify javascripts/#{file}.js;`
     end
   end
+end
+
+desc "Build and ZIP"
+task :build do
+  puts "Compiling JavaScript"
+  Rake::Task['juicer'].invoke
+  puts "Completed Javascript Compile"
+  
+  system "mkdir precompiled"
+  
+  system "cp * precompiled/*"
+  
+  system "rm precompiled/javascripts/background.js"
+  system "rm precompiled/javascripts/popup.js"
+  system "rm precompiled/javascripts/storage.js"
+  system "rm precompiled/Gemfile"
+  system "rm precompiled/Gemfile.lock"
+  system "rm precompiled/Rakefile"
+  
+  manifest = File.read('manifest.json')
+  
+  system "mkdir builds"
+  system "zip txtvia#{manifest.version}.zip precompiled/**"
 end

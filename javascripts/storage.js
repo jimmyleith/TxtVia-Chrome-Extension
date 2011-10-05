@@ -183,6 +183,12 @@ TxtVia.Storage = function () {
     if (!localStorage.clientId) {
         localStorage.clientId = 0;
     }
+    if (!localStorage.currentThread) {
+        localStorage.currentThread = "";
+    }
+    if (!localStorage.draftMessage) {
+        localStorage.draftMessage = "";
+    }
     if (!localStorage.pendingMessages) {
         localStorage.pendingMessages = JSON.stringify([]);
     }
