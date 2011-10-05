@@ -7,13 +7,7 @@ var PopUp = (function () {
     return {
         init: function () {
             TxtVia.init();
-            PopUp.Check.firstLaunch(function () {
-                PopUp.Check.authToken(function () {
-                    PopUp.Check.client(function () {
-                        PopUp.Check.devices();
-                    });
-                });
-            });
+            PopUp.onLoad();
 
             PopUp.RegisterEvents.submitForm();
             PopUp.RegisterEvents.display();
@@ -45,6 +39,8 @@ var PopUp = (function () {
                             PopUp.Process.threadConversation(request.message.recipient);
                         }
                         PopUp.Process.threads();
+                    } else if (request.client) {
+                        PopUp.onLoad();
                     } else if (request.device) {
                         PopUp.Check.devices();
                     } else {
@@ -53,13 +49,29 @@ var PopUp = (function () {
                 });
             } catch (e) {
                 console.error("[Background.init] onRequest listener failed");
-
             }
-
+        },
+        onLoad: function () {
+            PopUp.Check.firstLaunch(function () {
+                PopUp.Check.authToken(function () {
+                    PopUp.Check.client(function () {
+                        PopUp.Check.devices();
+                    });
+                });
+            });
         },
         onReady: function () {
-            console.log("[PopUp] Loaded...");
-            $("body").addClass("loaded");
+            var cleanEvent;
+            $("body").bind('webkitTransitionEnd', function () {
+                if (cleanEvent) {
+                    clearTimeout(cleanEvent);
+                    console.log("[PopUp.onReady] cleared");
+                }
+            });
+            cleanEvent = setTimeout(function () {
+                console.log("[PopUp] Loaded...");
+                $("body").addClass("loaded");
+            }, 250);
             if ($.parseJSON(localStorage.currentThread)) {
                 console.log("Opening Thread " + $.parseJSON(localStorage.currentThread).recipient);
                 PopUp.Process.thread($.parseJSON(localStorage.currentThread), PopUp.Actions.gotToThread);
@@ -105,7 +117,7 @@ var PopUp = (function () {
                     }, function () {
                         PopUp.Check.client();
                     });
-                    $("body").removeClass('main');
+                    $("body").removeClass('main').addClass("steps");
                     $(".steps ol li:eq(0)").removeClass("done");
                     PopUp.onReady();
                 } else {
@@ -119,7 +131,8 @@ var PopUp = (function () {
             devices: function () {
                 if (PopUp.Check.tries < 5) {
                     TxtVia.WebDB.getDevices(function (t, r) {
-                        var devices = [], i;
+                        var devices = [],
+                            i;
                         for (i = 0; i < r.rows.length; i++) {
                             if (r.rows.item(i).device_type != "client") {
                                 devices.push(r.rows.item(i));
@@ -412,15 +425,29 @@ var PopUp = (function () {
         },
         Actions: {
             loginLink: function () {
-                if (chrome.tabs) {
-                    chrome.tabs.create({
-                        url: TxtVia.url + '/sign_in?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
-                    });
-                } else {
-                    window.open(TxtVia.url + '/sign_in?return_url=' + window.location.href);
-                }
-                window.close();
-                // url:TxtVia.url + '/sign_in?app_identifier=' + TxtVia.appID + '&app_type=chrome'
+                $.ajax({
+                    url: TxtVia.url + '/sign_out.json',
+                    beforeSend: function () {
+                        localStorage.authToken = "";
+                        localStorage.clientId = 0;
+                        localStorage.googleToken = "";
+                        localStorage.unReadMessages = 0;
+                        TxtVia.WebDB.purgeDB(true);
+                    },
+                    failed: function () {
+                        alert('Failed to initiate the login procudure, \nplease try again.');
+                    },
+                    success: function () {
+                        if (chrome.tabs) {
+                            chrome.tabs.create({
+                                url: TxtVia.url + '/sign_in?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
+                            });
+                        } else {
+                            window.open(TxtVia.url + '/sign_in?return_url=' + window.location.href);
+                        }
+                        window.close();
+                    }
+                });
             },
             logoutLink: function () {
                 $.ajax({
@@ -433,7 +460,7 @@ var PopUp = (function () {
                         TxtVia.WebDB.purgeDB(true);
                     },
                     failed: function () {
-                        alert('Failed to properly logout, please try again.');
+                        alert('Failed to properly logout, \nplease try again.');
                     },
                     success: function () {
                         window.close();
@@ -445,6 +472,11 @@ var PopUp = (function () {
                 case 'android':
                     chrome.tabs.create({
                         url: TxtVia.url + '/downloads/android'
+                    });
+                    break;
+                case 'hashblue':
+                    chrome.tabs.create({
+                        url: TxtVia.url + '/users/auth/hash_blue'
                     });
                     break;
                 case 'iphone':

@@ -72,7 +72,7 @@ TxtVia.TextUtil = {};
 TxtVia.TextUtil.mobileNumber = function (number) {
     try {
         var code = JSON.parse(localStorage.locale).country_calling;
-        return number.replace(/\s/, '').replace(/^0/, code).replace(/^([^\+*])/, '+$1');
+        return number.replace(/\s/, '').replace(/^0/, code).replace(new RegExp('(^'+code.replace("+",'')+')'), '+$1');
     } catch (err) {
         console.log("[TxtVia.TextUtil.mobileNumber] can't convert number : " + number);
     }

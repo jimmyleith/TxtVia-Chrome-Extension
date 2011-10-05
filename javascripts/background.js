@@ -43,6 +43,8 @@ Background.waitForAuth = function () {
 Background.authenticated = function () {
     if (localStorage.authToken) {
         return localStorage.authToken.length > 0;
+    }else{
+        Background.waitForAuth();
     }
     return false;
 };
@@ -182,6 +184,11 @@ Background.Process.Post.client = function (callback) {
             success: function (data) {
                 localStorage.clientId = data.id;
                 Background.notify.client.success(data);
+                chrome.extension.sendRequest({
+                    client: data
+                }, function () {
+                    console.log("[Background.Process.Post.messages] sent to display");
+                });
             },
             error: function (e, s, t) {
                 if (e.status === 422) {
@@ -273,13 +280,13 @@ Background.Process.Get.messages = function () {
 };
 Background.Process.Poll.messages = function () {
     if (!Background.Process.pollLock && Background.authenticated()) {
+        Background.Process.pollLock = true;
         $.ajax({
             url: TxtVia.url + "/messages/poll.json?auth_token=" + localStorage.authToken,
             type: "GET",
             complete: function () {
-                Background.Process.Poll.lock = false;
+                Background.Process.pollLock = false;
                 setTimeout(function () {
-                    Background.Process.pollLock = true;
                     Background.Process.Poll.messages();
                 }, 30000);
             },
@@ -534,7 +541,11 @@ Background.connection = function () {
                     if (data) {
                         TxtVia.WebDB.insertInto.messages(data);
                         TxtVia.WebDB.getMessages(data.recipient, function (t, r) {
-                            data.name = r.rows.item(0).name;
+                            try{
+                                data.name = r.rows.item(0).name;
+                            }catch(e){
+                                data.name = data.recipient;
+                            }
                             Background.notify.newMessage(data);
                         });
                     }
