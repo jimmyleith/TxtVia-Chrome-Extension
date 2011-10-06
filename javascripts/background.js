@@ -32,7 +32,7 @@ Background.init = function () {
 };
 Background.waitForAuth = function () {
     if (Background.authenticated()) {
-        console.log("[Background.waitForAuth] Authenticated");
+        console.log("[Background.waitForAuth] Authenticated after waiting");
         Background.onAuthenticated();
     } else {
         setTimeout(function () {
@@ -43,19 +43,21 @@ Background.waitForAuth = function () {
 Background.authenticated = function () {
     if (localStorage.authToken) {
         return localStorage.authToken.length > 0;
-    }else{
-        Background.waitForAuth();
     }
     return false;
 };
 Background.onAuthenticated = function () {
     if (Background.authenticated()) {
+        console.log("[Background.onAuthenticated] Authenticated");
         if ($.parseJSON(localStorage.clientId) === 0) {
             Background.Process.Post.client();
         }
         Background.Process.Post.messages();
         Background.Process.Poll.messages();
         Background.connection();
+    }else{
+        console.log("[Background.onAuthenticated] Wiating for Auth");
+        Background.waitForAuth();
     }
 };
 Background.isError = false;

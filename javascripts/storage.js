@@ -166,7 +166,7 @@ TxtVia.Storage = function () {
         localStorage.env = "production";
     }
     if (!localStorage.version) {
-        localStorage.version = chrome.app.getDetails().version;
+        localStorage.version = chrome.app.getDetails() ? chrome.app.getDetails().version : '1.2.0';
     }
     if (!localStorage.unReadMessages) {
         localStorage.unReadMessages = 0;
