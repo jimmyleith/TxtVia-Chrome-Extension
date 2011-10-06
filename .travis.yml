@@ -1,1 +1,1 @@
-script: "rake jasmine:ci"
+script: "bundle exec rake jasmine:ci"
