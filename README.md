@@ -1,4 +1,4 @@
-TxtVia
+TxtVia [![Travis CI](https://secure.travis-ci.org/kylewelsby/TxtVia-Chrome-Extension.png?branch=master)](http://travis-ci.org/#!/kylewelsby/TxtVia-Chrome-Extension)
 ======
 Giving general users the ability to send SMS messages and receive from your computer browser, using your current number and pre-purchased network credits.
 
