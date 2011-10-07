@@ -69,6 +69,18 @@ rescue LoadError
   end
 end
 
+begin 
+  require 'jasmine-headless-webkit'
+
+  Jasmine::Headless::Task.new
+
+  task :default => 'jasmine:headless'
+rescue LoadError
+  task 'jasmine:headless' do 
+    abort 'jasmine-headless-webkit-travis-test not installed.'
+  end
+end
+
 desc "Continuious Intergration"
 task :ci do
   
