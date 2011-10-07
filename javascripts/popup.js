@@ -8,7 +8,7 @@ var PopUp = (function () {
         init: function () {
             TxtVia.init();
             PopUp.onLoad();
-            
+
             PopUp.RegisterEvents.submitForm();
             PopUp.RegisterEvents.display();
             PopUp.RegisterEvents.toolTips();
@@ -383,10 +383,10 @@ var PopUp = (function () {
                             self.find('.tip').fadeOut();
                         }
                     });
-                    qmark.bind("mouseenter",function(){
+                    qmark.bind("mouseenter", function () {
                         console.log("show tool tip");
                         self.find('.tooltip').fadeIn();
-                    }).bind("mouseleave",function(){
+                    }).bind("mouseleave", function () {
                         self.find('.tooltip').fadeOut();
                     });
                     tip = $("<span>", {

@@ -66,7 +66,7 @@ Background.Update = function () {
         current_version;
     if (window.chrome) {
         current_version = parseInt(chrome.app.getDetails().version.replace(/\./g, ''), 10);
-    }else{
+    } else {
         console.log("[Background.Update] `current_version` not implemented");
     }
 
@@ -97,7 +97,7 @@ Background.Update = function () {
     }
     if (window.chrome) {
         bumpVersion(chrome.app.getDetails().version);
-    }else{
+    } else {
         console.log("[Background.Update] `bumpVersion` not implemented");
     }
 };

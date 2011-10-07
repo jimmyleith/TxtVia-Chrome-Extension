@@ -12,7 +12,8 @@ v1.2
 * Realised, messages would fail to send due to Local Database issue.
 * Fixed device registration issues that would cause advance beyond setup screen.
 * Fixed selecting of device.
-* Save current thread and draft test.
+* Save current thread and draft message.
+* Added #blue support to login and send and receive messages.
 
 v1.1.1.1
 ----
