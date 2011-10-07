@@ -103,7 +103,7 @@ TxtVia.WebDB.getConversations = function (callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
         tx.executeSql('SELECT * FROM messages m LEFT JOIN contacts c ON c.number = m.recipient GROUP BY m.recipient ORDER BY m.created_at DESC', [], function (tx, rs) {
             var i;
-            for (i = 0; i < rs.rows.length; i++) {
+            for (i = 0; i < rs.rows.length; i = i + 1) {
                 callback(rs.rows.item(i));
             }
         }, TxtVia.WebDB.onError);
@@ -114,7 +114,7 @@ TxtVia.WebDB.getContacts = function (callback) {
         tx.executeSql('SELECT * FROM contacts ORDER BY name DESC', [], function (tx, rs) {
             var i, array = [],
                 hash;
-            for (i = 0; i < rs.rows.length; i++) {
+            for (i = 0; i < rs.rows.length; i = i + 1) {
                 hash = {
                     label: rs.rows.item(i).name,
                     value: rs.rows.item(i).number,

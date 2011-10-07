@@ -133,8 +133,8 @@ var PopUp = (function () {
                     TxtVia.WebDB.getDevices(function (t, r) {
                         var devices = [],
                             i;
-                        for (i = 0; i < r.rows.length; i++) {
-                            if (r.rows.item(i).device_type != "client") {
+                        for (i = 0; i < r.rows.length; i = i + 1) {
+                            if (r.rows.item(i).device_type !== "client") {
                                 devices.push(r.rows.item(i));
                             }
                         }

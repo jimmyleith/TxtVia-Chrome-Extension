@@ -17,8 +17,8 @@ namespace :juicer do
   end
   
   desc "Verify JavaScript documents"  
-  task :verify do 
-    files.each do |file|
+  task :verify do
+    ['background','popup','txtvia','storage'].each do |file|
       puts `juicer verify javascripts/#{file}.js;`
     end
   end
@@ -59,6 +59,7 @@ task :build do
   puts "-"*50
 
 end
+
 begin
   require 'jasmine'
   load 'jasmine/tasks/jasmine.rake'
@@ -66,4 +67,9 @@ rescue LoadError
   task :jasmine do
     abort "Jasmine is not available. In order to run jasmine, you must: (sudo) gem install jasmine"
   end
+end
+
+desc "Continuious Intergration"
+task :ci do
+  
 end

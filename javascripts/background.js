@@ -55,7 +55,7 @@ Background.onAuthenticated = function () {
         Background.Process.Post.messages();
         Background.Process.Poll.messages();
         Background.connection();
-    }else{
+    } else {
         console.log("[Background.onAuthenticated] Wiating for Auth");
         Background.waitForAuth();
     }
@@ -543,9 +543,9 @@ Background.connection = function () {
                     if (data) {
                         TxtVia.WebDB.insertInto.messages(data);
                         TxtVia.WebDB.getMessages(data.recipient, function (t, r) {
-                            try{
+                            try {
                                 data.name = r.rows.item(0).name;
-                            }catch(e){
+                            } catch (e) {
                                 data.name = data.recipient;
                             }
                             Background.notify.newMessage(data);
