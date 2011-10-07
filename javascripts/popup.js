@@ -8,9 +8,10 @@ var PopUp = (function () {
         init: function () {
             TxtVia.init();
             PopUp.onLoad();
-
+            
             PopUp.RegisterEvents.submitForm();
             PopUp.RegisterEvents.display();
+            PopUp.RegisterEvents.toolTips();
             PopUp.RegisterEvents.validateForm();
 
             // PopUp.Process.view();
@@ -302,32 +303,41 @@ var PopUp = (function () {
         },
         RegisterEvents: {
             display: function () {
-                var login = $("<a>", {
+                var login, logout, sync, hr, hashblue, donate;
+                login = $("<a>", {
                     href: "#",
                     'class': 'login',
                     text: "Login",
                     click: function () {
                         PopUp.Actions.loginLink();
                     }
-                }),
-                    logout = $("<a>", {
+                });
+                logout = $("<a>", {
                     href: "#",
                     'class': 'logout',
                     text: "Logout",
                     click: function () {
                         PopUp.Actions.logoutLink();
                     }
-                }),
-                    hr = $("<hr>"),
-                    sync = $("<a>", {
+                });
+                hr = $("<hr>");
+                hashblue = $("<a>", {
+                    href: "#",
+                    'class': 'hashblue',
+                    text: "Add #blue Account",
+                    click: function () {
+                        PopUp.Actions.download('hashblue');
+                    }
+                });
+                sync = $("<a>", {
                     href: "#",
                     'class': 'sync',
                     text: "Sync",
                     click: function () {
                         PopUp.Actions.syncLink();
                     }
-                }),
-                    donate = $("<a>", {
+                });
+                donate = $("<a>", {
                     href: 'http://txtvia.com/donate_now',
                     'class': 'donate',
                     text: "Donate",
@@ -335,7 +345,7 @@ var PopUp = (function () {
                         PopUp.Actions.donateLink();
                     }
                 });
-                $("header nav").empty().append(sync).append(donate).append(hr);
+                $("header nav").empty().append(sync).append(hashblue).append(donate).append(hr);
                 if (localStorage.authToken !== "") {
                     $("header nav").append(logout);
                 } else {
@@ -358,7 +368,35 @@ var PopUp = (function () {
                 });
 
             },
+            toolTips: function () {
+                $("*[data-tip]").each(function () {
 
+                    var self = $(this),
+                        qmark, tip;
+                    qmark = $("<span>", {
+                        text: "?",
+                        'class': 'qmark',
+                        mouseenter: function () {
+                            self.find('.tip').fadeIn();
+                        },
+                        mouseleave: function () {
+                            self.find('.tip').fadeOut();
+                        }
+                    });
+                    qmark.bind("mouseenter",function(){
+                        console.log("show tool tip");
+                        self.find('.tooltip').fadeIn();
+                    }).bind("mouseleave",function(){
+                        self.find('.tooltip').fadeOut();
+                    });
+                    tip = $("<span>", {
+                        'class': 'tooltip',
+                        html: $(this).data('tip')
+                    }).hide();
+                    $(this).append(qmark);
+                    $(qmark).append(tip);
+                });
+            },
             validateForm: function () {
                 $("textarea").bind("keyup", function () {
                     localStorage.draftMessage = $(this).val();
@@ -476,7 +514,7 @@ var PopUp = (function () {
                     break;
                 case 'hashblue':
                     chrome.tabs.create({
-                        url: TxtVia.url + '/users/auth/hash_blue'
+                        url: TxtVia.url + '/users/auth/hash_blue?return_url=' + encodeURIComponent(chrome.extension.getURL("/popup.html"))
                     });
                     break;
                 case 'iphone':
