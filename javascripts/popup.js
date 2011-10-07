@@ -48,7 +48,7 @@ var PopUp = (function () {
                     }
                 });
             } catch (e) {
-                console.error("[Background.init] onRequest listener failed");
+                console.log("[Background.init] onRequest listener failed");
             }
         },
         onLoad: function () {

@@ -25,7 +25,7 @@ Background.init = function () {
             }
         });
     } catch (e) {
-        console.error("[Background.init] onRequest listener failed");
+        console.log("[Background.init] onRequest listener failed");
     }
     Background.notify.icon();
     Background.onAuthenticated();
@@ -63,7 +63,12 @@ Background.onAuthenticated = function () {
 Background.isError = false;
 Background.Update = function () {
     var version = parseInt(localStorage.version.replace(/\./g, ''), 10),
+        current_version;
+    if (window.chrome) {
         current_version = parseInt(chrome.app.getDetails().version.replace(/\./g, ''), 10);
+    }else{
+        console.log("[Background.Update] `current_version` not implemented");
+    }
 
     function bumpVersion(v) {
         if (v !== localStorage.version) {
@@ -90,7 +95,11 @@ Background.Update = function () {
         bumpVersion("1.2.0");
         return;
     }
-    bumpVersion(chrome.app.getDetails().version);
+    if (window.chrome) {
+        bumpVersion(chrome.app.getDetails().version);
+    }else{
+        console.log("[Background.Update] `bumpVersion` not implemented");
+    }
 };
 Background.Migrate = {};
 Background.Migrate.v110 = function () {
@@ -142,7 +151,7 @@ Background.Process.Post.messages = function () {
                 // Double kill yeah!
             },
             error: function (e) {
-                console.error(e);
+                console.log(e);
                 if (Background.Process.isError === false && (e.status === 422 && $.parseJSON(e.responseText).client)) {
                     Background.Process.Post.client(function () {
                         Background.Process.isError = false;
@@ -196,7 +205,7 @@ Background.Process.Post.client = function (callback) {
                 if (e.status === 422) {
                     Background.Process.Get.device();
                 } else {
-                    console.error("[Background.Process.Post.client] failed : " + e.responseText);
+                    console.log("[Background.Process.Post.client] failed : " + e.responseText);
                     Background.notify.client.failed(e.status);
                 }
             },
@@ -225,7 +234,7 @@ Background.Process.Get.googleToken = function (callback) {
                 callback(data.get_token);
             },
             error: function (e) {
-                console.error("[Background.Process.Get.googleToken] failed : " + e.responseText);
+                console.log("[Background.Process.Get.googleToken] failed : " + e.responseText);
             },
             complete: function () {
                 Background.Process.lock = false;
@@ -252,7 +261,7 @@ Background.Process.Get.contacts = function () {
                 Background.Process.completed = Background.Process.completed + 1;
             },
             error: function (e) {
-                console.error("[Background.Process.Get.contacts] failed : " + e.responseText);
+                console.log("[Background.Process.Get.contacts] failed : " + e.responseText);
             }
         });
     }
@@ -272,7 +281,7 @@ Background.Process.Get.messages = function () {
                 Background.Process.completed = Background.Process.completed + 1;
             },
             error: function (e) {
-                console.error("[Background.Process.Get.messages] failed : " + e.responseText);
+                console.log("[Background.Process.Get.messages] failed : " + e.responseText);
                 if (e.status === 401) {
                     localStorage.authToken = "";
                 }
@@ -293,7 +302,7 @@ Background.Process.Poll.messages = function () {
                 }, 30000);
             },
             error: function (e) {
-                console.error("[Background.Process.Get.messages] failed : " + e.responseText);
+                console.log("[Background.Process.Get.messages] failed : " + e.responseText);
             }
         });
     }
@@ -312,7 +321,7 @@ Background.Process.Get.device = function () {
             });
         },
         error: function (e) {
-            console.error("[Background.Process.Get.device] failed : " + e.responseText);
+            console.log("[Background.Process.Get.device] failed : " + e.responseText);
         }
     });
 };
@@ -347,9 +356,13 @@ Background.notify = {};
 Background.notify.icon = function () {
     TxtVia.WebDB.unReadMessageCount(function (t, r) {
         var count = r.rows.item(0).c;
-        chrome.browserAction.setBadgeText({
-            text: count > 0 ? count.toString() : ""
-        });
+        if (window.chrome) {
+            chrome.browserAction.setBadgeText({
+                text: count > 0 ? count.toString() : ""
+            });
+        } else {
+            console.log("[Background.notify.icon] not implemented");
+        }
     });
 
 };
@@ -530,7 +543,7 @@ Background.connection = function () {
             TxtVia.server = new Pusher(TxtVia.Pusher.webSocketID.toString());
             TxtVia.channel = TxtVia.server.subscribe('txtvia_' + localStorage.authToken);
             TxtVia.channel.bind('subscription_error', function (status) {
-                console.error("[WebSocket] gave status code : " + status);
+                console.log("[WebSocket] gave status code : " + status);
                 if (status === 401) {
                     Background.notify.client.failed(status);
                 }
@@ -552,8 +565,8 @@ Background.connection = function () {
                         });
                     }
                 } catch (err) {
-                    console.error("[WebSocket] Failed to parse message data.");
-                    console.error(err);
+                    console.log("[WebSocket] Failed to parse message data.");
+                    console.log(err);
                 }
             });
             TxtVia.channel.bind('device', function (data) {
@@ -569,8 +582,8 @@ Background.connection = function () {
                         Background.notify.client.success(data);
                     }
                 } catch (err) {
-                    console.error("[WebSocket] Failed to parse device data.");
-                    console.error(err);
+                    console.log("[WebSocket] Failed to parse device data.");
+                    console.log(err);
                 }
             });
             break;
@@ -601,8 +614,8 @@ Background.connection = function () {
                         TxtVia.WebDB.insertInto.devices(device);
                     }
                 } catch (err) {
-                    console.error("[WebSocket] Failed to parse Beacon Push data.");
-                    console.error(err);
+                    console.log("[WebSocket] Failed to parse Beacon Push data.");
+                    console.log(err);
                 }
             });
             break;
