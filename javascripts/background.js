@@ -205,6 +205,7 @@ Background.Process.Post.client = function (callback) {
                 });
             },
             error: function (e, s, t) {
+                console.log("[Background.Process.Post.messages] error");
                 if (e.status === 422) {
                     Background.Process.Get.device();
                 } else {
@@ -315,7 +316,8 @@ Background.Process.Get.device = function () {
         url: TxtVia.url + "/devices/" + localStorage.UNIQUE_ID + ".json",
         type: "GET",
         success: function (data) {
-            if(data.length > 0){
+            console.log(data);
+            if(data){
                 localStorage.clientId = data.id;
                 Background.notify.client.restored(data);
                 chrome.extension.sendRequest({
