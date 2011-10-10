@@ -11,7 +11,7 @@ Background.init = function () {
     try {
         chrome.extension.onRequest.addListener(function (request, sender, callback) {
             console.log("[Background.init.onRequest] Request received");
-            if(callback){
+            if (callback) {
                 console.log("[Background.init.onRequest] with callback");
             }
             if (request.sync) {
@@ -33,6 +33,7 @@ Background.init = function () {
     Background.notify.icon();
     Background.onAuthenticated();
 };
+Background.failed = false;
 Background.waitForAuth = function () {
     if (Background.authenticated()) {
         console.log("[Background.waitForAuth] Authenticated after waiting");
@@ -186,14 +187,15 @@ Background.Process.Post.messages = function () {
     }
 };
 Background.Process.Post.client = function (callback) {
-
+    var unique_id = TxtVia.GenerateUniqueID();
     if (Background.Process.lock === false && Background.authenticated()) {
         $.ajax({
             url: TxtVia.url + "/devices.json",
             type: "POST",
-            data: "unique_id=" + localStorage.UNIQUE_ID + "&type=client&name=" + encodeURIComponent(TxtVia.appName) + "&auth_token=" + localStorage.authToken,
+            data: "unique_id=" + unique_id + "&type=client&name=" + encodeURIComponent(TxtVia.appName) + "&auth_token=" + localStorage.authToken,
             beforeSent: function () {
                 Background.Process.lock = true;
+                localStorage.UNIQUE_ID = unique_id;
             },
             success: function (data) {
                 localStorage.clientId = data.id;
@@ -312,25 +314,27 @@ Background.Process.Poll.messages = function () {
     }
 };
 Background.Process.Get.device = function () {
-    $.ajax({
-        url: TxtVia.url + "/devices/" + localStorage.UNIQUE_ID + ".json",
-        type: "GET",
-        success: function (data) {
-            console.log(data);
-            if(data){
-                localStorage.clientId = data.id;
-                Background.notify.client.restored(data);
-                chrome.extension.sendRequest({
-                    device: data
-                }, function () {
-                    console.log("[Background.Process.Get.device] sent to display");
-                });
+    if (Background.authenticated()) {
+        $.ajax({
+            url: TxtVia.url + "/devices/" + localStorage.UNIQUE_ID + ".json?auth_token=" + localStorage.authToken + "&type=client",
+            type: "GET",
+            success: function (data) {
+                console.log(data);
+                if (data) {
+                    localStorage.clientId = data.id;
+                    Background.notify.client.restored(data);
+                    chrome.extension.sendRequest({
+                        device: data
+                    }, function () {
+                        console.log("[Background.Process.Get.device] sent to display");
+                    });
+                }
+            },
+            error: function (e) {
+                console.log("[Background.Process.Get.device] failed : " + e.responseText);
             }
-        },
-        error: function (e) {
-            console.log("[Background.Process.Get.device] failed : " + e.responseText);
-        }
-    });
+        });
+    }
 };
 Background.Process.fullDownload = function (callback) {
     Background.Process.completed = 0;
@@ -344,7 +348,7 @@ Background.Process.onDevices = function (callback) {
             var silence = false;
             if (r.rows.length > 0) {
                 console.log(r.rows.length);
-                if(r.rows.length === 1 && r.rows.item(0).device_type === "client"){
+                if (r.rows.length === 1 && r.rows.item(0).device_type === "client") {
                     silence = true;
                 }
                 if (!callback && !silence) {
@@ -464,9 +468,10 @@ Background.notify.client.failed = function (status) {
         break;
     default:
         action = function () {
-            Background.Process.Post.client();
+            // Background.Process.Post.client();
+            window.location.reload();
         };
-        message = "Failed to successfully setup client with TxtVia.\n\r Click here to try again.";
+        message = "Failed to successfully setup client with TxtVia.\n\r Click here to reload TxtVia.";
         break;
     }
     notification = webkitNotifications.createNotification(chrome.extension.getURL('/images/failed.png'), "Awe damn", message);
@@ -475,7 +480,10 @@ Background.notify.client.failed = function (status) {
         notification.cancel();
     };
     console.log(notification);
-    notification.show();
+    if (Background.failed === false) {
+        Background.failed = true;
+        notification.show();
+    }
 };
 Background.notify.message = {};
 Background.notify.message.sent = function (message) {

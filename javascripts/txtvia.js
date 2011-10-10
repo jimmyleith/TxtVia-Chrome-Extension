@@ -69,6 +69,10 @@ TxtVia.uriParams = function (name) {
         return null;
     }
 };
+TxtVia.GenerateUniqueID = function () {
+    var today = new Date();
+    return $.sha256(TxtVia.appType + ":" + TxtVia.appID + ":" + today.getDate() + "-" + today.getMonth() + "-" + today.getYear() + "_" + today.getTime());
+};
 TxtVia.TextUtil = {};
 TxtVia.TextUtil.mobileNumber = function (number) {
     try {

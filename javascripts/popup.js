@@ -243,7 +243,7 @@ var PopUp = (function () {
             thread: function (conversation, callback) {
                 console.log(conversation);
                 PopUp.currentThread = conversation.recipient;
-                var header, avatar, currentThread;
+                var header, avatar, currentThread, img;
                 header = $("<h3>", {
                     text: conversation.name ? conversation.name : conversation.recipient
                 });

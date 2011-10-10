@@ -70,7 +70,7 @@ TxtVia.WebDB.insertInto.messages = function (message, callback) {
 TxtVia.WebDB.insertInto.devices = function (device, callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
         tx.executeSql('INSERT INTO devices(name, device_id, device_type, carrier, unique_id) VALUES (?,?,?,?,?)', [device.name, device.id, device.device_type, device.carrier, device.unique_id], callback, TxtVia.WebDB.onError);
-        if(device.device_type === "hashblue"){
+        if (device.device_type === "hashblue") {
             localStorage.pollForMessages = true;
         }
     });
@@ -176,7 +176,7 @@ TxtVia.Storage = function () {
         }
     }
     if (!localStorage.UNIQUE_ID) {
-        localStorage.UNIQUE_ID = $.sha256(TxtVia.appType + ":" + TxtVia.appID + ":" + today.getDate() + "-" + today.getMonth() + "-" + today.getYear() + "_" + today.getTime());
+        localStorage.UNIQUE_ID = TxtVia.GenerateUniqueID();
     }
     if (!localStorage.unReadMessages) {
         localStorage.unReadMessages = 0;
@@ -211,7 +211,7 @@ TxtVia.Storage = function () {
     if (!localStorage.enableSounds) {
         localStorage.enableSounds = true;
     }
-    if (!localStorage.pollForMessages){
+    if (!localStorage.pollForMessages) {
         localStorage.pollForMessages = false;
     }
     if (!localStorage.newMessageSound) {

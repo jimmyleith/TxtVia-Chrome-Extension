@@ -4,6 +4,7 @@ v1.2.1
 * Added polling column to Devices that may require a Poll method instead of Push.
 * UI updates
 * Stopped the jumping into thread.
+* Fixed getting client information from server.
 
 v1.2.0
 ----
