@@ -49,13 +49,15 @@
             </li>
             <li><h3>Download for</h3>
               <p><a href="#" onclick="PopUp.Actions.download('android');">Android</a></p>
-              <p class="coming-soon"><a href="#">BlackBerry</a></p>
+              <p class="coming-soon"><a href="#">BlackBerry <small>Coming Soon</small></a></p>
               <p class="coming-soon"><a href="#">iPhone <small>Coming Soon</small></a></p>
             </li>
             <li><h3>Enjoy</h3>
               <p>Get texting.</p>
             </li>
           </ol>
+          <button onclick="PopUp.Actions.syncLink();">Check for Devices</button>
+          
           <!-- <button onclick="$('body').removeClass('firstLaunch').addClass('main')">Continue</button> -->
         
         </section>
@@ -88,10 +90,14 @@
             <div class="flash"></div>
             <!-- <a href="#" onclick="PopUp.Actions.lock();">lock</a> -->
             <ul>
-              <li class="new_message" onclick="PopUp.Actions.gotToThread(true);">
+              <li class="new_message" onclick="PopUp.Actions.goToThread(true);">
                 <h3>New Message</h3>
               </li>
             </ul>
+            <div class="emptyList">
+              <h3>Looks like your new here&hellip;</h3>
+              <p>How about you say <em>Hello</em> to a close friend.</p>
+            </div>
             <footer>
             
             </footer>

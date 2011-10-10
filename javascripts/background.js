@@ -11,6 +11,9 @@ Background.init = function () {
     try {
         chrome.extension.onRequest.addListener(function (request, sender, callback) {
             console.log("[Background.init.onRequest] Request received");
+            if(callback){
+                console.log("[Background.init.onRequest] with callback");
+            }
             if (request.sync) {
                 Background.Process.fullDownload(callback);
                 Background.Process.Poll.messages();
@@ -56,7 +59,7 @@ Background.onAuthenticated = function () {
         Background.Process.Poll.messages();
         Background.connection();
     } else {
-        console.log("[Background.onAuthenticated] Wiating for Auth");
+        console.log("[Background.onAuthenticated] Waiting for Auth");
         Background.waitForAuth();
     }
 };
@@ -188,7 +191,7 @@ Background.Process.Post.client = function (callback) {
         $.ajax({
             url: TxtVia.url + "/devices.json",
             type: "POST",
-            data: "unique_id=" + TxtVia.UNIQUE_ID + "&type=client&name=" + encodeURIComponent(TxtVia.appName) + "&auth_token=" + localStorage.authToken,
+            data: "unique_id=" + localStorage.UNIQUE_ID + "&type=client&name=" + encodeURIComponent(TxtVia.appName) + "&auth_token=" + localStorage.authToken,
             beforeSent: function () {
                 Background.Process.lock = true;
             },
@@ -290,7 +293,7 @@ Background.Process.Get.messages = function () {
     }
 };
 Background.Process.Poll.messages = function () {
-    if (!Background.Process.pollLock && Background.authenticated()) {
+    if (!Background.Process.pollLock && Background.authenticated() && $.parseJSON(localStorage.pollForMessages)) {
         Background.Process.pollLock = true;
         $.ajax({
             url: TxtVia.url + "/messages/poll.json?auth_token=" + localStorage.authToken,
@@ -309,16 +312,18 @@ Background.Process.Poll.messages = function () {
 };
 Background.Process.Get.device = function () {
     $.ajax({
-        url: TxtVia.url + "/devices/" + TxtVia.UNIQUE_ID + ".json",
+        url: TxtVia.url + "/devices/" + localStorage.UNIQUE_ID + ".json",
         type: "GET",
         success: function (data) {
-            localStorage.clientId = data.id;
-            Background.notify.client.restored(data);
-            chrome.extension.sendRequest({
-                device: data
-            }, function () {
-                console.log("[Background.Process.Get.device] sent to display");
-            });
+            if(data.length > 0){
+                localStorage.clientId = data.id;
+                Background.notify.client.restored(data);
+                chrome.extension.sendRequest({
+                    device: data
+                }, function () {
+                    console.log("[Background.Process.Get.device] sent to display");
+                });
+            }
         },
         error: function (e) {
             console.log("[Background.Process.Get.device] failed : " + e.responseText);

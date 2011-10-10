@@ -437,6 +437,23 @@ bottom: 100%;
 top: 0;
 bottom: 0;
 }
+.main .new_message{
+  border-bottom:1px solid rgba(0,0,0,0.3);
+  font-size:1.1em;
+  text-align:center;
+}
+.main .emptyList{
+  margin:50px 15px 50px 15px;
+  text-align:center;
+  font-size:150%;
+}
+.main .emptyList p{
+  font-size:75%;
+}
+.main .emptyList p em{
+  font-style: italic;
+  font-family:times;
+}
 /* @group Threads */
 section.threads {
 box-sizing: border-box;
@@ -452,6 +469,7 @@ position: absolute;
 }
 section.threads p {
 color: #8f8f8f;
+margin-left:80px;
 }
 section.threads ul {
 margin: 0;
@@ -535,24 +553,12 @@ section.thread ol {
 display: block; 
 }
 section.thread time {
-float: right;
+position:absolute;
+top:5px;
+right:5px;
 text-align: right;
 color: rgba(255,254,255,0.39);
 font-size: .8em;
-}
-section.thread li time span {
--webkit-transition: all 0.5s ease-in-out;
--moz-transition: all 0.5s ease-in-out;
--o-transition: all 0.5s ease-in-out;
-transition: all 0.5s ease-in-out;
-display: inline-block;
-width: 0;
-white-space: nowrap;
-overflow: hidden;
-color: rgba(255,254,255,0.73);
-}
-section.thread li:hover time span {
-width: 45px;
 }
 section.thread form {
 position: absolute;
@@ -664,7 +670,8 @@ margin: 0;
 padding: 0;
 }
 .messages li {
-padding: 10px 15px;
+padding: 25px 15px 15px 15px;
+position:relative;
 }
 
 .sent {

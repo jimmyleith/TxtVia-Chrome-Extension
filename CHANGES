@@ -1,4 +1,11 @@
-v1.2
+v1.2.1
+----
+* Changed Unique ID to a SHA256.
+* Added polling column to Devices that may require a Poll method instead of Push.
+* UI updates
+* Stopped the jumping into thread.
+
+v1.2.0
 ----
 * Updated description.
 * Fixed jumping scroll when sending message.
@@ -14,6 +21,7 @@ v1.2
 * Fixed selecting of device.
 * Save current thread and draft message.
 * Added #blue support to login and send and receive messages.
+* Reduced extension download size.
 
 v1.1.1.1
 ----

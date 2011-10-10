@@ -1,5 +1,7 @@
 /*globals $,chrome,localStorage,console,window,setTimeout,setInterval,clearTimeout */
-
+/**
+ * @depend libs/jquery.sha256.min.js
+ **/
 var TxtVia = {};
 
 // App Types
@@ -58,7 +60,6 @@ TxtVia.init = function () {
     if (TxtVia.uriParams('auth_token')) {
         localStorage.authToken = TxtVia.uriParams('auth_token');
     }
-    TxtVia.UNIQUE_ID = TxtVia.appType + ":" + TxtVia.appID + ":" + localStorage.authToken;
 };
 TxtVia.uriParams = function (name) {
     var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);

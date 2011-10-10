@@ -63,9 +63,10 @@ var PopUp = (function () {
         },
         onReady: function () {
             var cleanEvent;
-            $("body").bind('webkitTransitionEnd', function () {
+            $("body").unbind('webkitTransitionEnd').bind('webkitTransitionEnd', function () {
                 if (cleanEvent) {
                     clearTimeout(cleanEvent);
+                    $("body").unbind('webkitTransitionEnd');
                     console.log("[PopUp.onReady] cleared");
                 }
             });
@@ -75,7 +76,7 @@ var PopUp = (function () {
             }, 250);
             if ($.parseJSON(localStorage.currentThread)) {
                 console.log("Opening Thread " + $.parseJSON(localStorage.currentThread).recipient);
-                PopUp.Process.thread($.parseJSON(localStorage.currentThread), PopUp.Actions.gotToThread);
+                PopUp.Process.thread($.parseJSON(localStorage.currentThread), PopUp.Actions.goToThread);
             }
         },
         Check: {
@@ -166,6 +167,8 @@ var PopUp = (function () {
         Process: {
             view: function () {
                 console.log("Rendering View");
+                // PopUp.onLoad();
+                // PopUp.Check.devices();
                 PopUp.UI.deviceList();
                 PopUp.Process.threads();
                 PopUp.Process.contacts();
@@ -195,6 +198,7 @@ var PopUp = (function () {
                 console.log("Rendering Threads");
                 $("#threads ul li:not(.new_message)").remove();
                 TxtVia.WebDB.getConversations(function (message) {
+                    $(".emptyList").fadeOut();
                     var li, avatar, img, h3, p, count;
 
                     li = $("<li>", {
@@ -227,10 +231,10 @@ var PopUp = (function () {
                         }));
                     });
                     li.append(img).append(h3).append(p);
-                    li.bind("click", function () {
+                    li.unbind("click").bind("click", function () {
                         console.log("Opening Thread " + message.recipient);
                         localStorage.currentThread = JSON.stringify(message);
-                        PopUp.Process.thread(message, PopUp.Actions.gotToThread);
+                        PopUp.Process.thread(message, PopUp.Actions.goToThread);
                         // PopUp.Actions.gotToThread();
                     });
                     $("#threads ul").append(li);
@@ -239,15 +243,16 @@ var PopUp = (function () {
             thread: function (conversation, callback) {
                 console.log(conversation);
                 PopUp.currentThread = conversation.recipient;
-                var header = $("<h3>", {
+                var header, avatar, currentThread;
+                header = $("<h3>", {
                     text: conversation.name ? conversation.name : conversation.recipient
-                }),
-                    avatar = conversation.photo_url ? conversation.photo_url + "?access_token=" + localStorage.googleToken : chrome.extension.getURL('/images/user_profile_image30.png'),
-                    img = $("<img>", {
+                });
+                avatar = conversation.photo_url ? conversation.photo_url + "?access_token=" + localStorage.googleToken : chrome.extension.getURL('/images/user_profile_image30.png');
+                img = $("<img>", {
                     'class': 'avatar',
                     src: avatar
-                }).hide().data('photo_url', conversation.photo_url),
-                    currentThread = $.parseJSON(localStorage.currentThread);
+                }).hide().data('photo_url', conversation.photo_url);
+                currentThread = $.parseJSON(localStorage.currentThread);
                 try {
                     img.bind('load', function () {
                         $(this).fadeIn();
@@ -261,16 +266,17 @@ var PopUp = (function () {
                 $(".thread header hgroup").empty().append(img).append(header);
                 $("form input[name=recipient]").val(conversation.recipient);
                 if (currentThread && currentThread.recipient === conversation.recipient) {
-                    $("form#new_message textarea").focus().val(localStorage.draftMessage).trigger('keyup');
+                    setTimeout(function () {
+                        $("form#new_message textarea").focus().val(localStorage.draftMessage).trigger('keyup');
+                    }, 400);
                 }
                 $("select[name=device]").val(conversation.device_id);
                 PopUp.Process.threadConversation(conversation.recipient);
-
                 if (callback) {
                     callback();
                 }
             },
-            threadConversation: function (recipient) {
+            threadConversation: function (recipient, callback) {
                 $(".thread ol").empty();
                 TxtVia.WebDB.getMessages(recipient, function (t, r) {
                     var i, li, message, time;
@@ -299,6 +305,7 @@ var PopUp = (function () {
                         console.log("[Background.Process.threadConversation] comeplete");
                     });
                 });
+
             }
         },
         RegisterEvents: {
@@ -449,7 +456,7 @@ var PopUp = (function () {
                         li.append(time);
                         $(".thread ol").append(li);
                         $(".thread .scroll").animate({
-                            scrollTop: $(".thread .scroll ol").height()
+                            scrollTop: $(".thread .scroll .messages").height()
                         });
                         pendingMessages.push(item);
                         localStorage.currentThread = "";
@@ -559,7 +566,8 @@ var PopUp = (function () {
                 $("body").removeClass("thread").addClass("threads");
                 localStorage.currentThread = "";
             },
-            gotToThread: function (empty) {
+            goToThread: function (empty) {
+                console.log("Thread Opened");
                 if (empty) {
                     $(".thread ol").empty();
                     var input = $("<input>", {
@@ -575,7 +583,7 @@ var PopUp = (function () {
                 }
                 $("body").removeClass("threads").addClass("thread");
                 $(".thread .scroll").animate({
-                    scrollTop: $(".thread .scroll").height()
+                    scrollTop: $(".thread .scroll .messages").height()
                 });
             },
             lock: function () {

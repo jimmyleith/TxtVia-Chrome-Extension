@@ -19,16 +19,10 @@ TxtVia.WebDB.onSuccess = function (tx, r) {
 };
 TxtVia.WebDB.createTables = function () {
     TxtVia.WebDB.db.transaction(function (tx) {
-        // tx.executeSql('CREATE TABLE IF NOT EXISTS pending_messages (id INTEGER PRIMARY KEY ASC, ' +
-        //                 'recipient TEXT, ' +
-        //                 'body TEXT, ' +
-        //                 'sent_at DATETIME)', [], function(){
-        //                     console.log('[TxtVia.WebDB.createTables] pending_messages created');
-        //                 }, TxtVia.WebDB.onError);
         tx.executeSql('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY ASC, message_id INTEGER UNIQUE NOT NULL, device_id INTEGER NOT NULL, client_id INTEGER, recipient TEXT NOT NULL, body TEXT NOT NULL, read INTEGER DEFAULT 0, messaged_at DATEIME NOT NULL, sent_at DATETIME, received_at DATETIME, created_at DATETIME)', [], function (tx, r) {
             console.log('[TxtVia.WebDB.createTables] messages created');
         }, TxtVia.WebDB.onError);
-        tx.executeSql('CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY ASC, device_id INTEGER NOT NULL UNIQUE, name TEXT, device_type TEXT, unique_id TEXT UNIQUE NOT NULL, carrier TEXT)', [], function (tx, r) {
+        tx.executeSql('CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY ASC, device_id INTEGER NOT NULL UNIQUE, name TEXT, device_type TEXT, unique_id TEXT UNIQUE NOT NULL, carrier TEXT, polling INTEGER DEFAULT 0)', [], function (tx, r) {
             console.log('[TxtVia.WebDB.createTables] devices created');
         }, TxtVia.WebDB.onError);
         tx.executeSql('CREATE TABLE IF NOT EXISTS contacts (name TEXT, number TEXT UNIQUE NOT NULL, photo_url TEXT)', [], function (tx, r) {
@@ -76,6 +70,9 @@ TxtVia.WebDB.insertInto.messages = function (message, callback) {
 TxtVia.WebDB.insertInto.devices = function (device, callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
         tx.executeSql('INSERT INTO devices(name, device_id, device_type, carrier, unique_id) VALUES (?,?,?,?,?)', [device.name, device.id, device.device_type, device.carrier, device.unique_id], callback, TxtVia.WebDB.onError);
+        if(device.device_type === "hashblue"){
+            localStorage.pollForMessages = true;
+        }
     });
 };
 TxtVia.WebDB.insertInto.contacts = function (contact, callback) {
@@ -91,6 +88,11 @@ TxtVia.WebDB.messageRead = function (id) {
 TxtVia.WebDB.lastReceivedMessage = function (callback) {
     TxtVia.WebDB.db.transaction(function (tx) {
         tx.executeSql("SELECT * FROM messages m LEFT JOIN contacts c On c.number = m.recipient ORDER BY id DESC LIMIT 1", [], callback, TxtVia.WebDB.onError);
+    });
+};
+TxtVia.WebDB.pollingDevices = function (callback) {
+    TxtVia.WebDB.db.transaction(function (tx) {
+        tx.executeSql("SELECT * FROM devices WHERE polling = true", [], callback, TxtVia.WebDB.onError);
     });
 };
 TxtVia.WebDB.deletePendingMessage = function (id) {
@@ -162,6 +164,7 @@ TxtVia.WebDB.v112Fix = function (callback) {
     });
 };
 TxtVia.Storage = function () {
+    var today = new Date();
     if (!localStorage.env) {
         localStorage.env = "production";
     }
@@ -171,7 +174,9 @@ TxtVia.Storage = function () {
         } else {
             localStorage.version = '1.2.0';
         }
-
+    }
+    if (!localStorage.UNIQUE_ID) {
+        localStorage.UNIQUE_ID = $.sha256(TxtVia.appType + ":" + TxtVia.appID + ":" + today.getDate() + "-" + today.getMonth() + "-" + today.getYear() + "_" + today.getTime());
     }
     if (!localStorage.unReadMessages) {
         localStorage.unReadMessages = 0;
@@ -205,6 +210,9 @@ TxtVia.Storage = function () {
     }
     if (!localStorage.enableSounds) {
         localStorage.enableSounds = true;
+    }
+    if (!localStorage.pollForMessages){
+        localStorage.pollForMessages = false;
     }
     if (!localStorage.newMessageSound) {
         localStorage.newMessageSound = 'newMessage.mp3';
