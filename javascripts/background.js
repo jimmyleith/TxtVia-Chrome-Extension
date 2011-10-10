@@ -340,6 +340,7 @@ Background.Process.onDevices = function (callback) {
     if (Background.Process.completed >= 2) {
         TxtVia.WebDB.getDevices(function (t, r) {
             if (r.rows.length > 0) {
+                console.log(r.rows.item(0));
                 if (!callback) {
                     Background.notify.syncComplete();
                 }
