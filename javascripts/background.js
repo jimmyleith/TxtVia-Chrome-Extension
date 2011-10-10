@@ -339,9 +339,13 @@ Background.Process.fullDownload = function (callback) {
 Background.Process.onDevices = function (callback) {
     if (Background.Process.completed >= 2) {
         TxtVia.WebDB.getDevices(function (t, r) {
+            var silence = false;
             if (r.rows.length > 0) {
-                console.log(r.rows.item(0));
-                if (!callback) {
+                console.log(r.rows.length);
+                if(r.rows.length === 1 && r.rows.item(0).device_type === "client"){
+                    silence = true;
+                }
+                if (!callback && !silence) {
                     Background.notify.syncComplete();
                 }
                 chrome.extension.sendRequest({

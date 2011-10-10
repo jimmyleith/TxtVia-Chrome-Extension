@@ -449,6 +449,8 @@ bottom: 0;
 }
 .main .emptyList p{
   font-size:75%;
+  padding:0;
+  margin:0;
 }
 .main .emptyList p em{
   font-style: italic;
